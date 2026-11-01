@@ -1,0 +1,3094 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spaceship Vocabulary Typing Defense</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- html2canvas for easy screenshot saving for teachers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #050814;
+            overflow: hidden;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+        /* Custom Neon Glows */
+        .neon-cyan {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.7), 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+        .neon-purple {
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.7), 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+        .box-glow {
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        /* Shake animation */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-screen {
+            animation: shake 0.25s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Input error shake & glow */
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .input-error {
+            animation: errorShake 0.25s ease-in-out;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+            color: #fca5a5 !important;
+        }
+
+        /* Boss warning animation */
+        @keyframes bossAlertPulse {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+            50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 35px rgba(239, 68, 68, 0.6); }
+        }
+        .boss-warning {
+            animation: bossAlertPulse 1.2s infinite ease-in-out;
+        }
+
+        /* Lucky Wheel Pointer */
+        .wheel-pointer {
+            width: 0;
+            height: 0;
+            border-left: 14px solid transparent;
+            border-right: 14px solid transparent;
+            border-top: 26px solid #f59e0b;
+            filter: drop-shadow(0 0 8px #f59e0b);
+        }
+
+        /* Floating Score Animation */
+        @keyframes scoreFly {
+            0% { transform: scale(1) translate(0, 0); opacity: 1; }
+            50% { transform: scale(1.4) translate(var(--tw-tx, 0), var(--tw-ty, -50px)); opacity: 0.9; }
+            100% { transform: scale(0.4) translate(var(--dest-x, 0), var(--dest-y, -200px)); opacity: 0; }
+        }
+        .floating-score {
+            position: fixed;
+            pointer-events: none;
+            z-index: 60;
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            animation: scoreFly 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-100 h-screen w-screen relative overflow-hidden flex flex-col justify-between">
+
+    <!-- CANVAS BACKGROUND & GAME ENGINE -->
+    <canvas id="gameCanvas" class="absolute inset-0 z-0 w-full h-full block"></canvas>
+
+    <!-- LEVEL UP & BOSS OVERLAY ALERT BANNER -->
+    <div id="eventBanner" class="absolute top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-500 opacity-0 transform -translate-y-6 flex flex-col items-center">
+        <div id="eventBannerBadge" class="px-6 py-2.5 rounded-2xl bg-amber-500/90 text-slate-950 font-orbitron font-black text-lg md:text-xl tracking-widest shadow-2xl flex items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+            <span id="eventBannerText">CẢNH BÁO QUÁI VẬT!</span>
+        </div>
+        <p id="eventBannerSub" class="text-xs text-amber-300 font-bold mt-1.5 bg-slate-950/80 px-3 py-1 rounded-full border border-amber-500/30">Gõ chuẩn câu dài để tiêu diệt Boss</p>
+    </div>
+
+    <!-- TOP BAR HUD (Visible during gameplay) -->
+    <header id="topHud" class="relative z-10 hidden w-full px-4 py-2 sm:px-6 sm:py-2.5 flex items-center justify-between bg-slate-950/80 backdrop-blur-md border-b border-cyan-500/20 shadow-md">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-400 flex items-center justify-center text-cyan-400 font-bold text-sm">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <div class="leading-tight">
+                    <span id="hudPlayerName" class="font-bold text-white tracking-wide text-xs sm:text-sm block">Pilot</span>
+                    <span id="hudGraceStatus" class="text-[9px] uppercase text-amber-400 tracking-wider font-semibold block">✨ Kiên Trung's Grace: Sẵn sàng</span>
+                </div>
+            </div>
+
+            <!-- Current Level & Part Badge -->
+            <div class="flex items-center gap-1.5">
+                <span id="hudLevelBadge" class="px-2 py-0.5 rounded-lg text-[11px] font-orbitron font-bold bg-amber-500/20 border border-amber-400/40 text-amber-300">
+                    LV.1
+                </span>
+                <span id="hudPartBadge" class="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-cyan-500/20 border border-cyan-400/40 text-cyan-300">
+                    Phần 1: Nghề nghiệp
+                </span>
+            </div>
+
+            <!-- Active Pets / Passives Indicator -->
+            <div id="hudBuffsContainer" class="hidden sm:flex items-center gap-1 text-xs">
+                <!-- Dynamically filled with Pet Cat / Dog / Retribution badges -->
+            </div>
+        </div>
+
+        <!-- Center: Countdown Timer -->
+        <div class="flex items-center gap-2 bg-slate-900/90 px-3.5 py-1 rounded-xl border border-amber-500/30">
+            <i class="fa-solid fa-stopwatch text-amber-400 text-sm animate-pulse"></i>
+            <span id="hudTimer" class="font-orbitron text-base sm:text-lg font-black text-amber-300 tracking-wider">10:00</span>
+        </div>
+
+        <!-- Right: Stats, Sound Toggle & Lives -->
+        <div class="flex items-center gap-3 sm:gap-5">
+            <!-- HP / Shield Hearts -->
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] text-rose-400 font-bold hidden sm:inline mr-1">LÁ CHẮN:</span>
+                <div id="livesContainer" class="flex gap-1 text-rose-500 text-sm sm:text-base">
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+            </div>
+
+            <!-- Score -->
+            <div class="text-right">
+                <div id="hudScore" class="font-orbitron text-base sm:text-lg font-black text-cyan-300 neon-cyan leading-none">0</div>
+            </div>
+
+            <!-- Sound toggle button -->
+            <button id="btnToggleSound" class="p-1.5 sm:p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition text-xs" title="Bật/Tắt Âm thanh">
+                <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+
+            <!-- Exit button -->
+            <button id="btnPauseGame" class="p-1.5 sm:p-2 rounded-lg bg-slate-800/80 hover:bg-rose-900/60 border border-slate-700 hover:border-rose-500 text-slate-300 hover:text-white transition text-xs">
+                <i class="fa-solid fa-pause"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- IN-GAME TYPING INPUT CONTAINER (Fixed at Bottom-Center) -->
+    <div id="typingBarContainer" class="relative z-10 hidden w-full max-w-3xl mx-auto px-4 pb-6">
+        <div class="relative bg-slate-950/85 backdrop-blur-xl border-2 border-cyan-500/50 rounded-2xl p-3 shadow-2xl box-glow flex flex-col items-center">
+            <div class="w-full flex items-center justify-between mb-1.5 text-xs text-slate-400 px-2 font-semibold">
+                <span id="activeWordHint" class="text-cyan-400 font-bold flex items-center gap-1.5 truncate">
+                    <i class="fa-solid fa-bullseye text-cyan-400"></i> Nhập từ hoặc câu của phi thuyền đối thủ
+                </span>
+                <span id="comboCounter" class="text-amber-400 font-orbitron font-bold hidden whitespace-nowrap ml-2">COMBO x2! 🔥</span>
+            </div>
+
+            <!-- Actual Input Field -->
+            <div class="relative w-full">
+                <input 
+                    type="text" 
+                    id="typingInput" 
+                    autocomplete="off" 
+                    autocorrect="off" 
+                    autocapitalize="off" 
+                    spellcheck="false" 
+                    placeholder="Gõ nhanh từ/câu để khai hỏa..." 
+                    class="w-full bg-slate-900/90 text-white font-orbitron text-base sm:text-lg md:text-xl font-bold py-3.5 px-5 rounded-xl border border-cyan-400/30 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/20 text-center tracking-wider placeholder:text-slate-500 placeholder:font-sans placeholder:font-normal placeholder:tracking-normal placeholder:text-sm"
+                />
+                <button id="btnClearInput" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-sm py-1 px-2">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+            </div>
+            
+            <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5 flex-wrap justify-center text-center">
+                <i class="fa-solid fa-lightbulb text-amber-400"></i> Luyện tập câu dài: Nhấn phím cách <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-cyan-300 font-mono text-[10px] border border-slate-700">Space</kbd> bình thường giữa các chữ!
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL / OVERLAY: START SCREEN                  -->
+    <!-- ============================================== -->
+    <div id="startScreen" class="absolute inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="relative w-full max-w-xl bg-slate-900/90 border border-cyan-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl box-glow flex flex-col gap-6">
+            
+            <!-- Title -->
+            <div class="text-center">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 uppercase tracking-widest mb-3">
+                    <i class="fa-solid fa-rocket"></i> Space Typing Academy
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold font-orbitron tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 neon-cyan">
+                    TYPING DEFENSE
+                </h1>
+                <p class="text-slate-300 text-sm mt-2 max-w-md mx-auto">
+                    Bảo vệ ngân hà bằng cách gõ chính xác các từ vựng tiếng Anh trước khi chúng chạm vào căn cứ của bạn!
+                </p>
+            </div>
+
+            <!-- Player Name Input -->
+            <div class="space-y-2">
+                <label for="playerNameInput" class="block text-xs uppercase font-bold text-slate-300 tracking-wider">
+                    <i class="fa-regular fa-id-badge text-cyan-400 mr-1"></i> Tên Phi Hành Gia / Tên của em:
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="playerNameInput" 
+                        maxlength="16" 
+                        placeholder="Nhập tên em (VD: Minh Anh, Tom...)" 
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 text-base font-semibold"
+                    >
+                </div>
+            </div>
+
+            <!-- Vocabulary Section Selection (Split into 2 Parts) -->
+            <div class="space-y-2.5">
+                <label class="block text-xs uppercase font-bold text-slate-300 tracking-wider">
+                    <i class="fa-solid fa-book-open text-cyan-400 mr-1"></i> Chế độ Chơi & Bài Học:
+                </label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- Part 1 Button -->
+                    <button type="button" data-part="progression" class="part-select-btn active-part p-3.5 rounded-xl border border-cyan-500 bg-cyan-500/20 text-left transition relative flex flex-col justify-between">
+                        <div class="font-bold text-cyan-300 text-sm flex items-center justify-between">
+                            Chiến Dịch Level Up
+                            <i class="fa-solid fa-circle-check text-cyan-400"></i>
+                        </div>
+                        <span class="text-[11px] text-slate-300 mt-1 block">Khởi đầu Phần 1 ➔ Tự động thăng cấp sang Phần 2 & Quái Alien</span>
+                        <span class="text-[10px] text-amber-400 mt-2 font-mono font-bold">Khuyên dùng ★★★</span>
+                    </button>
+
+                    <!-- Part 2 Button -->
+                    <button type="button" data-part="2" class="part-select-btn p-3.5 rounded-xl border border-slate-700 bg-slate-950/60 text-left transition relative flex flex-col justify-between hover:border-slate-500">
+                        <div class="font-bold text-slate-200 text-sm flex items-center justify-between">
+                            Chỉ Phần 2
+                            <i class="fa-regular fa-circle text-slate-600"></i>
+                        </div>
+                        <span class="text-[11px] text-slate-400 mt-1 block">Luyện riêng Phần 2: Sở thích, thói quen & các cụm từ</span>
+                        <span class="text-[10px] text-slate-500 mt-2 font-mono">8 từ vựng</span>
+                    </button>
+
+                    <!-- Both Parts Button -->
+                    <button type="button" data-part="all" class="part-select-btn p-3.5 rounded-xl border border-slate-700 bg-slate-950/60 text-left transition relative flex flex-col justify-between hover:border-slate-500">
+                        <div class="font-bold text-slate-200 text-sm flex items-center justify-between">
+                            Cả 2 Phần Ngẫu Nhiên
+                            <i class="fa-regular fa-circle text-slate-600"></i>
+                        </div>
+                        <span class="text-[11px] text-slate-400 mt-1 block">Xuất hiện hỗn hợp cả Phần 1 và 2 từ đầu</span>
+                        <span class="text-[10px] text-slate-500 mt-2 font-mono">21 từ vựng</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Duration Selection -->
+            <div class="space-y-2">
+                <label class="block text-xs uppercase font-bold text-slate-300 tracking-wider">
+                    <i class="fa-solid fa-clock text-cyan-400 mr-1"></i> Thời gian thử thách:
+                </label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" data-time="180" class="time-select-btn py-2 px-3 rounded-lg border border-slate-700 bg-slate-950/60 text-xs font-semibold text-slate-300 hover:border-slate-500 text-center">
+                        3 Phút (Thử nhanh)
+                    </button>
+                    <button type="button" data-time="300" class="time-select-btn py-2 px-3 rounded-lg border border-slate-700 bg-slate-950/60 text-xs font-semibold text-slate-300 hover:border-slate-500 text-center">
+                        5 Phút (Vừa phải)
+                    </button>
+                    <button type="button" data-time="600" class="time-select-btn active-time py-2 px-3 rounded-lg border border-amber-500 bg-amber-500/20 text-xs font-bold text-amber-300 text-center">
+                        10 Phút (Tiêu chuẩn)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Start Game CTA -->
+            <button id="btnStartGame" class="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-orbitron font-extrabold tracking-wider text-lg shadow-lg shadow-cyan-500/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3">
+                <i class="fa-solid fa-play"></i> BẮT ĐẦU PHI VỤ
+            </button>
+
+            <!-- Bottom utility buttons -->
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800 text-slate-400">
+                <button id="btnOpenVocabList" class="hover:text-cyan-400 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-book"></i> Xem danh sách từ vựng 2 phần
+                </button>
+                <button id="btnOpenLeaderboard" class="hover:text-amber-400 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-trophy"></i> Bảng vàng xếp hạng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: VOCABULARY REFERENCE LIST (2 PARTS)     -->
+    <!-- ============================================== -->
+    <div id="vocabModal" class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="relative w-full max-w-3xl max-h-[85vh] bg-slate-900 border border-cyan-500/40 rounded-3xl p-6 shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                        <i class="fa-solid fa-spell-check text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Sổ Tay Từ Vựng Không Gian</h2>
+                        <p class="text-xs text-slate-400">Toàn bộ 21 từ & cụm từ từ vở bài học</p>
+                    </div>
+                </div>
+                <button id="btnCloseVocabModal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto py-4 space-y-6 pr-1">
+                <!-- Part 1 List -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 font-bold text-xs uppercase tracking-wider">Phần 1: 13 mục</span>
+                        <span class="text-xs text-slate-400">Công việc, trợ lý & thói quen</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="vocabGridPart1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Part 2 List -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-2.5 py-1 rounded bg-indigo-500/20 text-indigo-300 font-bold text-xs uppercase tracking-wider">Phần 2: 8 mục</span>
+                        <span class="text-xs text-slate-400">Sở thích, giải trí & quan điểm</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="vocabGridPart2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-3 border-t border-slate-800 text-right">
+                <button id="btnCloseVocabModal2" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold transition">
+                    Đã hiểu, sẵn sàng chơi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: GAME OVER / RESULT SCREEN (FOR TEACHER) -->
+    <!-- ============================================== -->
+    <div id="resultModal" class="fixed inset-0 z-40 hidden flex items-center justify-center p-3 sm:p-4 bg-slate-950/95 backdrop-blur-lg overflow-y-auto">
+        <div class="relative w-full max-w-xl bg-slate-900 border-2 border-cyan-500/50 rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col items-center text-center my-auto">
+            
+            <!-- TEACHER REPORT SCREENSHOT CONTAINER -->
+            <div id="screenshotReportArea" class="w-full bg-slate-950/90 p-5 rounded-2xl border border-cyan-500/30 mb-4 text-center">
+                <!-- Header Banner -->
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <span class="text-xs uppercase font-bold tracking-widest text-cyan-400">Phiếu Báo Cáo Học Tập</span>
+                    </div>
+                    <span id="reportDate" class="text-[10px] text-slate-400 font-mono">01/11/2026</span>
+                </div>
+
+                <div id="resultIcon" class="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-3xl mx-auto mb-3 border border-cyan-400 shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+
+                <h2 id="resultHeading" class="font-orbitron text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300">
+                    KẾT QUẢ PHI VỤ VŨ TRỤ
+                </h2>
+                
+                <!-- Student Identification Tag -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-700 mt-2 mb-4">
+                    <span class="text-xs text-slate-400">Học sinh / Phi công:</span>
+                    <span id="reportPlayerName" class="text-sm font-extrabold text-amber-400 tracking-wide">Minh Anh</span>
+                    <span id="reportLevelBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold ml-1">Đạt Level 2</span>
+                </div>
+
+                <!-- Teacher instruction banner -->
+                <div id="teacherCallout" class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-4 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>Chụp màn hình phiếu này để nộp cho Giáo viên nhé!</span>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full mb-3">
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold block">Tổng Điểm</span>
+                        <span id="resFinalScore" class="font-orbitron text-xl font-black text-cyan-400">0</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold block">Từ Đã Gõ</span>
+                        <span id="resWordsDestroyed" class="font-orbitron text-xl font-black text-emerald-400">0</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold block">Độ Chính Xác</span>
+                        <span id="resAccuracy" class="font-orbitron text-xl font-black text-amber-400">100%</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold block">Combo Max</span>
+                        <span id="resMaxCombo" class="font-orbitron text-xl font-black text-rose-400">0</span>
+                    </div>
+                </div>
+
+                <!-- Bosses Defeated & Time Played -->
+                <div class="flex items-center justify-between text-xs px-2 text-slate-400 mb-2 font-mono">
+                    <span>Quái vật Alien hạ gục: <strong id="resBossesDefeated" class="text-rose-400">0</strong></span>
+                    <span>Thời gian trụ vững: <strong id="resTimePlayed" class="text-slate-200">10:00</strong></span>
+                </div>
+
+                <!-- Mistakes Summary for Teacher Review -->
+                <div id="mistakesBox" class="w-full bg-slate-900/90 rounded-xl p-3 border border-slate-800 text-left max-h-32 overflow-y-auto hidden">
+                    <span class="text-[11px] font-bold text-rose-400 uppercase tracking-wider block mb-1">
+                        <i class="fa-solid fa-circle-exclamation"></i> Các từ cần ôn tập lại:
+                    </span>
+                    <ul id="mistakesList" class="text-xs text-slate-300 space-y-1 list-disc list-inside"></ul>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full">
+                <!-- Screenshot Trigger Button -->
+                <button id="btnTakeScreenshot" class="w-full sm:w-auto flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm tracking-wide transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-camera"></i> Tải ảnh chụp cho Giáo viên
+                </button>
+                <button id="btnPlayAgain" class="w-full sm:w-auto flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-orbitron font-bold tracking-wide transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Chơi Lại
+                </button>
+                <button id="btnReturnMenu" class="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition">
+                    Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: LEADERBOARD                            -->
+    <!-- ============================================== -->
+    <div id="leaderboardModal" class="fixed inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+        <div class="relative w-full max-w-lg bg-slate-900 border border-amber-500/40 rounded-3xl p-6 shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <i class="fa-solid fa-trophy text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Bảng Xếp Hạng Hàng Đầu</h2>
+                        <p class="text-xs text-slate-400">Top phi hành gia gõ nhanh và chuẩn xác</p>
+                    </div>
+                </div>
+                <button id="btnCloseLeaderboardModal" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="py-4 space-y-2 max-h-80 overflow-y-auto" id="leaderboardList">
+                <!-- Dynamically filled -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                <button id="btnClearScores" class="text-xs text-rose-400 hover:text-rose-300 underline">
+                    Xoá lịch sử điểm
+                </button>
+                <button id="btnCloseLeaderboardModal2" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold transition">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-Game floating notification toast -->
+    <div id="gameNotification" class="fixed top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-all duration-300 opacity-0 transform -translate-y-2">
+        <div class="px-5 py-2 rounded-full bg-cyan-500/90 text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/50 flex items-center gap-2">
+            <span id="notificationText">Thông báo!</span>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: CYBER LUCKY WHEEL (AFTER BOSS DEFEAT)    -->
+    <!-- ============================================== -->
+    <div id="wheelModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl">
+        <div class="relative w-full max-w-md bg-slate-900 border-2 border-amber-500/50 rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center">
+            
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
+                <i class="fa-solid fa-gift"></i> Phần Thưởng Chiến Thắng Boss
+            </div>
+            <h3 class="font-orbitron text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500">
+                CYBER LUCKY WHEEL
+            </h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Vòng quay đang quay tự động để chọn phần thưởng cho em...</p>
+
+            <!-- Wheel Container -->
+            <div class="relative flex items-center justify-center my-2">
+                <!-- Pointer on top -->
+                <div class="absolute -top-3 z-20 wheel-pointer"></div>
+                <canvas id="wheelCanvas" width="300" height="300" class="rounded-full shadow-2xl border-4 border-slate-800"></canvas>
+            </div>
+
+            <!-- Result Box -->
+            <div id="wheelResultBox" class="w-full mt-4 p-3 rounded-2xl bg-slate-950 border border-amber-500/30 min-h-[58px] flex flex-col items-center justify-center">
+                <span id="wheelStatusText" class="text-xs font-orbitron font-bold text-amber-400 animate-pulse">
+                    ⚡ ĐANG QUAY PHẦN THƯỞNG...
+                </span>
+                <span id="wheelRewardDetail" class="text-sm font-extrabold text-white hidden"></span>
+            </div>
+
+            <button id="btnCloseWheel" class="w-full mt-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-orbitron font-black text-sm tracking-wider transition hidden">
+                NHẬN THƯỞNG & TIẾP TỤC
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME LOGIC -->
+    <script>
+        /* =================================================================
+           1. DATA: VOCABULARY EXTRACTED FROM NOTEBOOK (2 DISTINCT PARTS)
+           ================================================================= */
+        const VOCAB_PART_1 = [
+            { word: "get paid", vi: "được trả tiền", category: "work" },
+            { word: "keep sb company", vi: "đồng hành cùng ai", category: "social" },
+            { word: "application form", vi: "đơn đăng kí (n)", category: "work" },
+            { word: "sales assistants", vi: "trợ lý bán hàng", category: "job" },
+            { word: "life-guard", vi: "nhân viên cứu hộ (gốc)", category: "job" },
+            { word: "receptionist", vi: "nhân viên lễ tân", category: "job" },
+            { word: "shop assistant", vi: "trợ lí bán hàng", category: "job" },
+            { word: "another", vi: "số ít (khác/nữa)", category: "grammar" },
+            { word: "hard-working", vi: "làm việc chăm chỉ", category: "trait" },
+            { word: "especially", vi: "đặc biệt là / như", category: "adverb" },
+            { word: "weekdays", vi: "ngày trong tuần", category: "time" },
+            { word: "day off", vi: "ngày nghỉ (a)", category: "time" },
+            { word: "day in", vi: "ngày làm việc (a)", category: "time" }
+        ];
+
+        const VOCAB_PART_2 = [
+            { word: "play tennis", vi: "chơi tennis", category: "hobby" },
+            { word: "eat fruit and vegetables", vi: "ăn hoa quả và rau", category: "health" },
+            { word: "enjoy art and music", vi: "thưởng thức hội hoạ và âm nhạc", category: "hobby" },
+            { word: "I enjoy doing smth", vi: "cấu trúc: Tôi thích làm gì đó", category: "grammar" },
+            { word: "scrolling on Tiktok", vi: "lướt tiktok", category: "hobby" },
+            { word: "discuss", vi: "bàn luận", category: "action" },
+            { word: "equally", vi: "ngang nhau", category: "adverb" },
+            { word: "for similar reason", vi: "lý do tương tự nhau", category: "phrase" }
+        ];
+
+        /* LEVEL 3 & 4: TECH & COMMUNICATION VOCABULARY */
+        const VOCAB_PART_3 = [
+            { word: "desktop computer", vi: "máy tính để bàn", category: "tech" },
+            { word: "laptop", vi: "máy tính xách tay", category: "tech" },
+            { word: "tablet", vi: "máy tính bảng", category: "tech" },
+            { word: "landline telephone", vi: "điện thoại bàn", category: "tech" }
+        ];
+
+        const VOCAB_PART_4 = [
+            { word: "smartphone", vi: "điện thoại thông minh", category: "tech" },
+            { word: "smart TV", vi: "ti vi thông minh", category: "tech" },
+            { word: "letter", vi: "lá thư", category: "message" },
+            { word: "smart watch", vi: "đồng hồ thông minh", category: "tech" }
+        ];
+
+        /* LONG PHRASES/SENTENCES FOR ALIEN MONSTERS (COMBINED FROM BASE VOCAB) */
+        const ALIEN_BOSS_SENTENCES = [
+            { text: "a hard-working sales assistant", vi: "một trợ lý bán hàng làm việc chăm chỉ" },
+            { text: "I enjoy eating fruit and vegetables", vi: "Tôi thích ăn hoa quả và rau củ" },
+            { text: "keep sb company on weekdays", vi: "đồng hành cùng ai đó vào các ngày trong tuần" },
+            { text: "enjoy art and music on my day off", vi: "thưởng thức nghệ thuật và âm nhạc vào ngày nghỉ" },
+            { text: "scrolling on Tiktok especially on day off", vi: "lướt tiktok đặc biệt là vào ngày nghỉ" },
+            { text: "fill out an application form for receptionist", vi: "điền đơn đăng ký làm nhân viên lễ tân" },
+            { text: "discuss and get paid equally for similar reason", vi: "bàn luận và được trả tiền ngang nhau vì lý do tương tự" },
+            { text: "the life-guard is hard-working especially today", vi: "nhân viên cứu hộ làm việc chăm chỉ đặc biệt là hôm nay" },
+            { text: "type on desktop computer and laptop", vi: "gõ trên máy tính để bàn và máy tính xách tay" },
+            { text: "check smartphone and smart watch for letter", vi: "kiểm tra điện thoại thông minh và đồng hồ để xem thư" },
+            { text: "watch smart TV and talk on landline telephone", vi: "xem smart TV và nói chuyện trên điện thoại bàn" },
+            { text: "read letter on tablet especially on weekdays", vi: "đọc thư trên máy tính bảng đặc biệt vào ngày trong tuần" }
+        ];
+
+        /* =================================================================
+           2. SOUND SYNTHESIZER (Web Audio API - Dynamic Ambience per Level)
+           ================================================================= */
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.bgmTimer = null;
+                this.bgmStep = 0;
+                this.bgmSection = 0; // 0: Verse, 1: Chorus, 2: Cyber Drop Solo
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                if (this.muted) {
+                    this.stopBGM();
+                } else if (currentState === GameState.PLAYING) {
+                    this.startBGM();
+                }
+                return this.muted;
+            }
+
+            /* EXPLOSIVE & STRUCTURED CYBER ROCK SOUNDTRACK (VERSE - CHORUS - DROP) */
+            startBGM() {
+                if (this.muted) return;
+                this.init();
+                this.stopBGM();
+
+                // Dynamic speed by Level
+                const baseInterval = Math.max(160, 240 - (Math.min(currentLevel, 10) * 8));
+
+                // 16-step structured progressions
+                const chordVerse = [41.2, 41.2, 49.0, 41.2, 55.0, 55.0, 49.0, 41.2, 36.7, 36.7, 43.6, 36.7, 49.0, 49.0, 43.6, 36.7]; // E / D Rock
+                const chordChorus = [55.0, 55.0, 65.4, 73.4, 82.4, 82.4, 73.4, 65.4, 49.0, 49.0, 61.7, 49.0, 41.2, 41.2, 49.0, 55.0]; // Explosive Chorus
+                const chordDrop = [32.7, 32.7, 32.7, 65.4, 32.7, 32.7, 73.4, 32.7, 32.7, 32.7, 32.7, 82.4, 98.0, 87.3, 73.4, 65.4]; // Heavy Metal Drop
+
+                this.bgmTimer = setInterval(() => {
+                    if (this.muted || !this.ctx || currentState !== GameState.PLAYING) return;
+                    const now = this.ctx.currentTime;
+                    const isBossActive = enemies.some(e => e.isBoss);
+
+                    // Structured song progression: every 32 steps changes musical section
+                    if (this.bgmStep % 32 === 0) {
+                        this.bgmSection = (this.bgmSection + 1) % 3;
+                    }
+
+                    const activeProgression = isBossActive ? chordDrop : (this.bgmSection === 1 ? chordChorus : chordVerse);
+                    const bassFreq = activeProgression[this.bgmStep % activeProgression.length];
+                    const stepInBar = this.bgmStep % 4;
+                    this.bgmStep++;
+
+                    // 1. Heavy Overdriven Cyber Guitar Power Chords
+                    const osc = this.ctx.createOscillator();
+                    const filter = this.ctx.createBiquadFilter();
+                    const shaper = this.ctx.createWaveShaper();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(bassFreq, now);
+
+                    shaper.curve = this.makeDistortionCurve(isBossActive ? 80 : (this.bgmSection === 1 ? 55 : 35));
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(isBossActive ? 1200 : 850, now);
+                    filter.frequency.exponentialRampToValueAtTime(160, now + 0.22);
+
+                    const vol = isBossActive ? 0.085 : (this.bgmSection === 1 ? 0.075 : 0.055);
+                    gain.gain.setValueAtTime(vol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+                    osc.connect(shaper);
+                    shaper.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.23);
+
+                    // 2. Structured Drum Machine: Kick & Snare with Hi-Hat
+                    if (stepInBar === 0 || stepInBar === 2) {
+                        this.playDrumKick(now, isBossActive ? 150 : 120);
+                    } else {
+                        this.playDrumSnare(now);
+                    }
+                    this.playHiHat(now);
+
+                    // 3. Cyber Lead Melody Arpeggiator during Chorus / Boss
+                    if (this.bgmSection === 1 || isBossActive) {
+                        if (this.bgmStep % 2 === 0) {
+                            this.playCyberLead(now, bassFreq * (isBossActive ? 6 : 4));
+                        }
+                    }
+                }, baseInterval);
+            }
+
+            divineGrace() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                // Heavenly angelical brass chord
+                [440, 554, 659, 880, 1108].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 1.25);
+                });
+            }
+
+            petShoot() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.18);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            empBlast() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(20, now + 0.6);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.65);
+            }
+
+            playSubHeartbeat(now) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(65, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.18);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            playHiHat(now) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'highpass';
+                osc.frequency.setValueAtTime(8000, now);
+                gain.gain.setValueAtTime(0.02, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            }
+
+            makeDistortionCurve(amount) {
+                const k = typeof amount === 'number' ? amount : 50;
+                const n_samples = 44100;
+                const curve = new Float32Array(n_samples);
+                const deg = Math.PI / 180;
+                for (let i = 0; i < n_samples; ++i) {
+                    const x = (i * 2) / n_samples - 1;
+                    curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+                }
+                return curve;
+            }
+
+            playDrumKick(now, startFreq = 120) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(startFreq, now);
+                osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.13);
+            }
+
+            playDrumSnare(now) {
+                // Noise buffer
+                const bufferSize = this.ctx.sampleRate * 0.1;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(800, now);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start(now);
+            }
+
+            playCyberLead(now, freq) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.03, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.16);
+            }
+
+            stopBGM() {
+                if (this.bgmTimer) {
+                    clearInterval(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+            }
+
+            applause() {
+                if (this.muted) return;
+                this.init();
+                // Crowd cheering noise burst
+                const duration = 2.2;
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1200, this.ctx.currentTime);
+                filter.Q.setValueAtTime(1.5, this.ctx.currentTime);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start(this.ctx.currentTime);
+            }
+
+            wheelTick() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(950, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            }
+
+            fanfare() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                [523, 659, 784, 1046].forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + i * 0.09);
+                    gain.gain.setValueAtTime(0.12, now + i * 0.09);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.09);
+                    osc.stop(now + i * 0.09 + 0.38);
+                });
+            }
+
+            laser() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+
+            explosion() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                
+                // Noise buffer for blast
+                const bufferSize = this.ctx.sampleRate * 0.3;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, now);
+                filter.frequency.linearRampToValueAtTime(50, now + 0.3);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start(now);
+            }
+
+            hitBase() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            combo() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                [440, 554, 659, 880].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.08, now + idx * 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.1);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.05);
+                    osc.stop(now + idx * 0.05 + 0.12);
+                });
+            }
+
+            errorTypo() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.16);
+
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.16);
+            }
+
+            bossAlert() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                // Double ominous klaxon horn
+                [0, 0.28].forEach((delay) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now + delay);
+                    osc.frequency.linearRampToValueAtTime(110, now + delay + 0.24);
+                    gain.gain.setValueAtTime(0.25, now + delay);
+                    gain.gain.linearRampToValueAtTime(0.01, now + delay + 0.24);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + delay);
+                    osc.stop(now + delay + 0.25);
+                });
+            }
+
+            levelUp() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                [261, 329, 392, 523, 659, 784].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.12, now + idx * 0.07);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.18);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.07);
+                    osc.stop(now + idx * 0.07 + 0.2);
+                });
+            }
+        }
+
+        const audio = new SoundFX();
+
+        /* =================================================================
+           3. GAME STATE & VARIABLES
+           ================================================================= */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let animationFrameId = null;
+        let lastTimestamp = 0;
+
+        const GameState = {
+            MENU: 'MENU',
+            PLAYING: 'PLAYING',
+            PAUSED: 'PAUSED',
+            GAMEOVER: 'GAMEOVER'
+        };
+
+        let currentState = GameState.MENU;
+
+        // User settings
+        let playerName = "Player";
+        let chosenPart = "progression"; // "progression", "2", or "all"
+        let chosenDuration = 600; // default 10 mins (600s)
+
+        // Level & Difficulty Progression System (10 LEVELS)
+        let currentLevel = 1;
+        const MAX_LEVELS = 10;
+        let wordsTypedInCurrentLevel = 0;
+        const WORDS_TO_LEVEL_UP = 8;
+        let bossesDefeated = 0;
+        
+        // KIÊN TRUNG'S GRACE FEATURE
+        let hasKienTrungGrace = true; // Protects student on first breach!
+
+        // PET COMPANIONS & PASSIVES FROM WHEEL
+        let hasPetCat = false; // Shoots every 30s
+        let petCatTimer = 30000;
+        let hasPetDog = false; // Shoots every 20s
+        let petDogTimer = 20000;
+        let hasRetaliationBomb = false; // Clears all enemies on breach
+
+        // Final Boss every 1 minute 15 seconds (75s) timer & clean board state
+        let bossCycleTimer = 75; // 75 seconds countdown (1m15s)
+        let isWaitingForClearScreenToSpawnBoss = false;
+
+        // Gameplay metrics
+        let score = 0;
+        let lives = 5;
+        const maxLives = 5;
+        let timeRemaining = 600;
+        let combo = 0;
+        let maxCombo = 0;
+        let totalWordsTyped = 0;
+        let totalKeyStrokes = 0;
+        let correctKeyStrokes = 0;
+        let missedWords = new Set();
+
+        // Game entities
+        let enemies = [];
+        let lasers = [];
+        let particles = [];
+        let stars = [];
+        let ambientParticles = []; // Spores, dust, or magma sparks
+        let spawnTimer = 0;
+        let spawnInterval = 3000; // ms between checks
+
+        // Calculate dynamic concurrent words limit based on level (Levels >= 5 gets +1 word per level)
+        function getMaxConcurrentWords() {
+            if (currentLevel <= 4) return 3;
+            return 3 + (currentLevel - 4); // Lv5: 4 words, Lv6: 5 words, Lv7: 6 words, etc.
+        }
+
+        // Ambient Character Entities (Astronaut, Cosmic Whale, Flora Dragon, Magma Behemoth)
+        let ambientCharacter = {
+            type: 'astronaut',
+            x: -120,
+            y: 200,
+            vx: 0.35,
+            phase: 0
+        };
+
+        // Visual player base
+        let playerShip = {
+            x: 0,
+            y: 0,
+            width: 70,
+            height: 60,
+            angle: 0
+        };
+
+        /* =================================================================
+           4. RESIZE & CANVAS SETUP
+           ================================================================= */
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            playerShip.x = canvas.width / 2;
+            playerShip.y = canvas.height - 110;
+            initStarfield();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function initStarfield() {
+            stars = [];
+            ambientParticles = [];
+            const starCount = Math.floor((canvas.width * canvas.height) / 4500);
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 0.8 + 0.2,
+                    alpha: Math.random() * 0.8 + 0.2
+                });
+            }
+
+            // Atmosphere ambient particles for special levels (velvet glow, spores, embers)
+            for (let i = 0; i < 40; i++) {
+                ambientParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 4 + 1.5,
+                    speedY: Math.random() * 0.6 + 0.1,
+                    speedX: (Math.random() - 0.5) * 0.5,
+                    alpha: Math.random() * 0.6 + 0.2,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        /* =================================================================
+           5. ENEMY (WORD SHIPS & ALIEN BOSS MONSTERS) CLASS
+           ================================================================= */
+        class EnemyShip {
+            constructor(dataObj, isBoss = false) {
+                this.isBoss = isBoss;
+                this.word = isBoss ? dataObj.text : dataObj.word;
+                this.meaning = dataObj.vi;
+                this.part = dataObj.part || 1;
+                
+                // Dimensions: compact for standard words, grand for Star Wars Alien Boss
+                this.width = isBoss ? Math.max(340, this.word.length * 10 + 60) : Math.max(145, this.word.length * 10.5 + 24);
+                this.height = isBoss ? 82 : 44;
+                
+                // SAFE SPAWN ZONE: Start strictly below top HUD (Y >= 65px)
+                // Spawn within comfortable screen margin
+                const padding = 20;
+                const minX = padding;
+                const maxX = Math.max(minX + 10, canvas.width - this.width - padding);
+                this.x = Math.random() * (maxX - minX) + minX;
+                this.y = 65; // Immediately visible right under top HUD!
+
+                // Speed scale
+                const levelSpeedBonus = (currentLevel - 1) * 0.14;
+                const timeSpeedBonus = (1 - (timeRemaining / chosenDuration)) * 0.18;
+
+                if (this.isBoss) {
+                    this.speed = 0.16 + (levelSpeedBonus * 0.4); // Slow, imposing dreadnought
+                } else {
+                    this.speed = (0.28 + Math.random() * 0.18) + levelSpeedBonus + timeSpeedBonus;
+                }
+
+                // Tracking typed progress
+                this.typedIndex = 0;
+                this.isTargeted = false;
+                this.colorTheme = this.isBoss ? '#ef4444' : (this.part === 1 ? '#06b6d4' : '#a855f7');
+                this.eyeBlink = Math.random() * Math.PI;
+            }
+
+            update(deltaTime) {
+                this.y += this.speed * (deltaTime / 16.6);
+                this.eyeBlink += 0.05 * (deltaTime / 16.6);
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                if (this.isBoss) {
+                    this.drawStarWarsAlienBoss();
+                } else {
+                    this.drawStandardShip();
+                }
+
+                ctx.restore();
+            }
+
+            drawStandardShip() {
+                // Subtle glow on targeted
+                if (this.isTargeted) {
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 12;
+                }
+
+                // Spaceship Hull
+                ctx.fillStyle = 'rgba(10, 18, 35, 0.92)';
+                ctx.strokeStyle = this.isTargeted ? '#38bdf8' : (this.colorTheme === '#06b6d4' ? 'rgba(6, 182, 212, 0.65)' : 'rgba(168, 85, 247, 0.65)');
+                ctx.lineWidth = this.isTargeted ? 2.2 : 1.4;
+
+                ctx.beginPath();
+                ctx.roundRect(0, 0, this.width, this.height, 10);
+                ctx.fill();
+                ctx.stroke();
+
+                // Target Lock Marker
+                if (this.isTargeted) {
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.beginPath();
+                    ctx.arc(10, 11, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Vietnamese Meaning (Top line)
+                ctx.shadowBlur = 0;
+                ctx.font = '600 10.5px Nunito, sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.meaning, this.width / 2, 14);
+
+                // English Typing text (Bottom line)
+                ctx.font = '700 13.5px Orbitron, monospace';
+                ctx.textAlign = 'center';
+
+                const typedPart = this.word.substring(0, this.typedIndex);
+                const remainingPart = this.word.substring(this.typedIndex);
+
+                const totalTextWidth = ctx.measureText(this.word).width;
+                let startX = (this.width / 2) - (totalTextWidth / 2);
+                const textY = 32;
+
+                if (typedPart.length > 0) {
+                    ctx.fillStyle = '#4ade80';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(typedPart, startX, textY);
+                    startX += ctx.measureText(typedPart).width;
+                }
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.textAlign = 'left';
+                ctx.fillText(remainingPart, startX, textY);
+
+                // Small thruster
+                ctx.fillStyle = this.colorTheme;
+                ctx.fillRect(this.width / 2 - 7, -3, 14, 3);
+            }
+
+            drawStarWarsAlienBoss() {
+                // Impressive Star Wars Imperial Alien Dreadnought Visual
+                const w = this.width;
+                const h = this.height;
+
+                // Red Bio-Hazard Plasma Aura
+                const pulse = Math.sin(this.eyeBlink * 2) * 8 + 16;
+                ctx.shadowColor = '#dc2626';
+                ctx.shadowBlur = pulse;
+
+                // 1. Angular menacing hull (Star Destroyer / Sith Bio-Cruiser)
+                ctx.fillStyle = '#09050d';
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2.5;
+
+                ctx.beginPath();
+                ctx.moveTo(w / 2, h + 14); // Forward ominous ramming prow
+                ctx.lineTo(w + 14, h * 0.55); // Right wing tip
+                ctx.lineTo(w - 10, -8); // Right engine bay
+                ctx.lineTo(w / 2, 2);   // Central reactor spine
+                ctx.lineTo(10, -8);     // Left engine bay
+                ctx.lineTo(-14, h * 0.55); // Left wing tip
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // 2. Glowing Sith red vents & laser turrets
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(18, -6, 12, 4);
+                ctx.fillRect(w - 30, -6, 12, 4);
+
+                // 3. Central Alien Cybernetic Eye (Scanning Star Wars Death Star glow)
+                const eyeX = w / 2;
+                const eyeY = 16;
+                ctx.fillStyle = '#7f1d1d';
+                ctx.beginPath();
+                ctx.ellipse(eyeX, eyeY, 20, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Sweeping laser pupil
+                const pupilOffset = Math.sin(this.eyeBlink * 3) * 11;
+                ctx.fillStyle = '#f87171';
+                ctx.shadowColor = '#f87171';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(eyeX + pupilOffset, eyeY, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 4. Header Badges
+                ctx.shadowBlur = 0;
+                ctx.font = '900 9.5px Orbitron, monospace';
+                ctx.fillStyle = '#fca5a5';
+                ctx.textAlign = 'left';
+                ctx.fillText('⚡ SITH ALIEN DREADNOUGHT', 18, 32);
+
+                ctx.font = '600 11px Nunito, sans-serif';
+                ctx.fillStyle = '#fecaca';
+                ctx.textAlign = 'right';
+                ctx.fillText(this.meaning, w - 18, 32);
+
+                // 5. Typing text display container (clear high contrast bar)
+                ctx.fillStyle = 'rgba(2, 6, 23, 0.85)';
+                ctx.strokeStyle = '#f87171';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.roundRect(14, 40, w - 28, 30, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Render sentence
+                ctx.font = '700 12.5px Orbitron, monospace';
+                const typedPart = this.word.substring(0, this.typedIndex);
+                const remainingPart = this.word.substring(this.typedIndex);
+                const totalWidth = ctx.measureText(this.word).width;
+                let startX = (w / 2) - (totalWidth / 2);
+                const textY = 60;
+
+                if (typedPart.length > 0) {
+                    ctx.fillStyle = '#4ade80';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(typedPart, startX, textY);
+                    startX += ctx.measureText(typedPart).width;
+                }
+
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'left';
+                ctx.fillText(remainingPart, startX, textY);
+            }
+        }
+
+        /* =================================================================
+           6. LASERS & EXPLOSION PARTICLES
+           ================================================================= */
+        class LaserBeam {
+            constructor(startX, startY, targetX, targetY) {
+                this.x = startX;
+                this.y = startY;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.life = 1.0;
+            }
+
+            update(deltaTime) {
+                this.life -= 0.08 * (deltaTime / 16.6);
+            }
+
+            draw() {
+                if (this.life <= 0) return;
+                ctx.save();
+                ctx.strokeStyle = `rgba(56, 189, 248, ${this.life})`;
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 12;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.targetX, this.targetY);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color || '#38bdf8';
+                this.size = Math.random() * 3 + 1.5;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 1;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.03 + 0.02;
+            }
+
+            update(deltaTime) {
+                this.x += this.vx * (deltaTime / 16.6);
+                this.y += this.vy * (deltaTime / 16.6);
+                this.alpha -= this.decay * (deltaTime / 16.6);
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createExplosion(x, y, color) {
+            const count = 24;
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        /* =================================================================
+           7. DRAW PLAYER DEFENSE CANNON (SPACESHIP)
+           ================================================================= */
+        function drawPlayerShip() {
+            ctx.save();
+            ctx.translate(playerShip.x, playerShip.y);
+
+            // Pulsing thruster glow
+            const glow = Math.sin(Date.now() / 150) * 8 + 15;
+            ctx.shadowColor = '#06b6d4';
+            ctx.shadowBlur = glow;
+
+            // Base platform
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 2.5;
+
+            // Sci-fi cannon / vessel
+            ctx.beginPath();
+            ctx.moveTo(0, -28); // Tip
+            ctx.lineTo(26, 22);
+            ctx.lineTo(12, 18);
+            ctx.lineTo(0, 24);
+            ctx.lineTo(-12, 18);
+            ctx.lineTo(-26, 22);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Inner core energy crystal
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(0, 2, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cockpit glass
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(0, -6, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        /* =================================================================
+           8. VOCABULARY SELECTION POOL, LEVEL UP & SPAWN LOGIC
+           ================================================================= */
+        function getVocabularyPool() {
+            let pool = [];
+            
+            if (chosenPart === "progression") {
+                // Progression mode across 10 Levels:
+                if (currentLevel === 1) {
+                    pool = VOCAB_PART_1.map(item => ({ ...item, part: 1 }));
+                } else if (currentLevel === 2) {
+                    pool = VOCAB_PART_2.map(item => ({ ...item, part: 2 }));
+                } else if (currentLevel === 3) {
+                    pool = VOCAB_PART_3.map(item => ({ ...item, part: 3 }));
+                } else if (currentLevel === 4) {
+                    pool = VOCAB_PART_4.map(item => ({ ...item, part: 4 }));
+                } else {
+                    // Levels 5 to 10: Cumulative comprehensive vocabulary
+                    pool = [
+                        ...VOCAB_PART_4.map(item => ({ ...item, part: 4 })),
+                        ...VOCAB_PART_3.map(item => ({ ...item, part: 3 })),
+                        ...VOCAB_PART_2.map(item => ({ ...item, part: 2 })),
+                        ...VOCAB_PART_1.map(item => ({ ...item, part: 1 }))
+                    ];
+                }
+            } else if (chosenPart === "2") {
+                pool = VOCAB_PART_2.map(item => ({ ...item, part: 2 }));
+            } else {
+                pool = [
+                    ...VOCAB_PART_1.map(item => ({ ...item, part: 1 })),
+                    ...VOCAB_PART_2.map(item => ({ ...item, part: 2 })),
+                    ...VOCAB_PART_3.map(item => ({ ...item, part: 3 })),
+                    ...VOCAB_PART_4.map(item => ({ ...item, part: 4 }))
+                ];
+            }
+            return pool;
+        }
+
+        function triggerLevelUp() {
+            currentLevel++;
+            wordsTypedInCurrentLevel = 0;
+            audio.levelUp();
+
+            document.getElementById('hudLevelBadge').textContent = `LV.${currentLevel}`;
+
+            let titleMsg = `LEVEL UP! ĐẠT LEVEL ${currentLevel}`;
+            let subMsg = "";
+
+            if (currentLevel === 2) {
+                subMsg = "Tiến vào Vùng Velvety Blue: Mở khóa Phần 2 & Cá Voi Không Gian!";
+                document.getElementById('hudPartBadge').textContent = "LV.2: Velvety Blue";
+                document.getElementById('hudPartBadge').className = "hidden md:inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-blue-500/20 border border-blue-400/40 text-blue-300";
+            } else if (currentLevel === 3) {
+                subMsg = "Tiến vào Vùng Blooming Green: Mở khóa Máy tính, Tablet & Rồng Phát Quang!";
+                document.getElementById('hudPartBadge').textContent = "LV.3: Blooming Green";
+                document.getElementById('hudPartBadge').className = "hidden md:inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-emerald-500/20 border border-emerald-400/40 text-emerald-300";
+            } else if (currentLevel === 4) {
+                subMsg = "CẢNH BÁO: Rơi vào Red Hellground! Mở khóa Smartphone, Smart Watch & Behemoth!";
+                document.getElementById('hudPartBadge').textContent = "LV.4: Red Hellground";
+                document.getElementById('hudPartBadge').className = "hidden md:inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-rose-500/20 border border-rose-400/40 text-rose-300 animate-pulse";
+            } else {
+                const maxWordsNow = getMaxConcurrentWords();
+                subMsg = `Chiến trường mở rộng! Số lượng từ tối đa tăng lên: ${maxWordsNow} từ cùng lúc!`;
+                document.getElementById('hudPartBadge').textContent = `LV.${currentLevel}: Bão Táp (${maxWordsNow} từ)`;
+            }
+
+            // Adapt background soundtrack immediately to new atmosphere
+            audio.startBGM();
+
+            showEventBanner(titleMsg, subMsg, 'level');
+        }
+
+        function triggerBossPhase() {
+            isWaitingForClearScreenToSpawnBoss = true;
+            showEventBanner("⚠️ CHUẨN BỊ ĐÓN BOSS!", "Hãy tiêu diệt hết các từ trên màn hình để khiêu chiến Boss!", "boss");
+        }
+
+        /* PERSONALIZED STAR WARS BOSS PHRASES TIED TO PLAYER'S NAME */
+        function getPersonalizedBossPhrase() {
+            const name = playerName || "Pilot";
+            const phrases = [
+                { text: `${name} wants to get paid on weekdays`, vi: `${name} muốn được trả tiền vào ngày trong tuần` },
+                { text: `${name} is a hard-working sales assistant`, vi: `${name} là một trợ lý bán hàng rất chăm chỉ` },
+                { text: `${name} enjoys eating fruit and vegetables`, vi: `${name} rất thích ăn trái cây và rau củ` },
+                { text: `${name} keeps sb company on day off`, vi: `${name} đồng hành cùng ai đó vào ngày nghỉ` },
+                { text: `${name} fills out application form for receptionist`, vi: `${name} điền đơn đăng ký làm nhân viên lễ tân` },
+                { text: `${name} loves scrolling on Tiktok especially at night`, vi: `${name} thích lướt tiktok đặc biệt là ban đêm` },
+                { text: `${name} and the life-guard discuss equally`, vi: `${name} và nhân viên cứu hộ cùng bàn luận ngang nhau` },
+                { text: `${name} enjoys art and music for similar reason`, vi: `${name} thích nghệ thuật và âm nhạc vì lý do tương tự` },
+                { text: `${name} uses desktop computer and laptop daily`, vi: `${name} dùng máy tính bàn và laptop mỗi ngày` },
+                { text: `${name} checks smartphone and smart watch for letter`, vi: `${name} xem smartphone và đồng hồ thông minh để tìm thư` },
+                { text: `${name} watches smart TV on a day off`, vi: `${name} xem ti vi thông minh vào ngày nghỉ` },
+                { text: `${name} calls on landline telephone and uses tablet`, vi: `${name} gọi điện thoại bàn và sử dụng máy tính bảng` }
+            ];
+            return phrases[Math.floor(Math.random() * phrases.length)];
+        }
+
+        function spawnAlienBoss() {
+            isWaitingForClearScreenToSpawnBoss = false;
+            const phrase = getPersonalizedBossPhrase();
+            const boss = new EnemyShip(phrase, true);
+            enemies.push(boss);
+
+            audio.bossAlert();
+            showEventBanner("👾 QUÁI VẬT ALIEN XUẤT HIỆN!", `Gõ câu dài: "${phrase.text}"`, 'boss');
+        }
+
+        function showEventBanner(mainText, subText, type = 'boss') {
+            const banner = document.getElementById('eventBanner');
+            const badge = document.getElementById('eventBannerBadge');
+            const main = document.getElementById('eventBannerText');
+            const sub = document.getElementById('eventBannerSub');
+
+            main.textContent = mainText;
+            sub.textContent = subText;
+
+            if (type === 'boss') {
+                badge.className = "px-6 py-2.5 rounded-2xl bg-rose-600/95 text-white font-orbitron font-black text-base sm:text-lg tracking-widest shadow-2xl flex items-center gap-3 boss-warning";
+            } else {
+                badge.className = "px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-orbitron font-black text-base sm:text-lg tracking-widest shadow-2xl flex items-center gap-3";
+            }
+
+            banner.classList.remove('opacity-0', '-translate-y-6');
+            banner.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                banner.classList.remove('opacity-100', 'translate-y-0');
+                banner.classList.add('opacity-0', '-translate-y-6');
+            }, 3500);
+        }
+
+        function spawnEnemy() {
+            // Không sinh quái thường nếu đang đợi dọn bàn cho Boss, hoặc đang có Boss trên màn hình
+            if (isWaitingForClearScreenToSpawnBoss || enemies.some(e => e.isBoss)) {
+                return;
+            }
+
+            // Giới hạn số từ linh hoạt (Level 1-4 là 3; Level >= 5 là 3 + (Level - 4))
+            const currentLimit = getMaxConcurrentWords();
+            if (enemies.length >= currentLimit) {
+                return;
+            }
+
+            const pool = getVocabularyPool();
+            if (pool.length === 0) return;
+
+            const onScreenWords = enemies.map(e => e.word);
+            let availableWords = pool.filter(item => !onScreenWords.includes(item.word));
+            
+            if (availableWords.length === 0) {
+                availableWords = pool; // fallback
+            }
+
+            const chosen = availableWords[Math.floor(Math.random() * availableWords.length)];
+            enemies.push(new EnemyShip(chosen, false));
+        }
+
+        /* =================================================================
+           9. GAME LOOP (UPDATE & RENDER)
+           ================================================================= */
+        function gameLoop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const deltaTime = Math.min(timestamp - lastTimestamp, 50);
+            lastTimestamp = timestamp;
+
+            if (currentState === GameState.PLAYING) {
+                updateGame(deltaTime);
+            }
+
+            renderGame();
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function updateGame(deltaTime) {
+            // Update Background Stars & Ambient Atmosphere Particles
+            for (let s of stars) {
+                s.y += s.speed * (deltaTime / 16.6);
+                if (s.y > canvas.height) {
+                    s.y = 0;
+                    s.x = Math.random() * canvas.width;
+                }
+            }
+
+            for (let p of ambientParticles) {
+                p.y += (currentLevel >= 4 ? -p.speedY * 1.5 : p.speedY) * (deltaTime / 16.6);
+                p.x += Math.sin(p.phase) * p.speedX * (deltaTime / 16.6);
+                p.phase += 0.03;
+                if (p.y > canvas.height) {
+                    p.y = 0;
+                    p.x = Math.random() * canvas.width;
+                } else if (p.y < 0) {
+                    p.y = canvas.height;
+                    p.x = Math.random() * canvas.width;
+                }
+            }
+
+            // Update Ambient Background Characters (Astronaut, Whale, Dragon, Behemoth)
+            ambientCharacter.x += ambientCharacter.vx * (deltaTime / 16.6);
+            ambientCharacter.phase += 0.02 * (deltaTime / 16.6);
+            if (ambientCharacter.x > canvas.width + 160) {
+                ambientCharacter.x = -160;
+                ambientCharacter.y = Math.random() * (canvas.height * 0.45) + 120;
+            }
+
+            // Update Companion Pets (Space Cat & Cyber Dog)
+            if (hasPetCat) {
+                petCatTimer -= deltaTime;
+                if (petCatTimer <= 0) {
+                    petCatTimer = 30000;
+                    triggerPetSupport('cat');
+                }
+            }
+
+            if (hasPetDog) {
+                petDogTimer -= deltaTime;
+                if (petDogTimer <= 0) {
+                    petDogTimer = 20000;
+                    triggerPetSupport('dog');
+                }
+            }
+
+            // Check Boss Spawn Condition: Nếu đã dọn sạch toàn bộ từ và đang đợi Boss
+            if (isWaitingForClearScreenToSpawnBoss && enemies.length === 0) {
+                spawnAlienBoss();
+            }
+
+            // Spawn Regular Enemies with dynamic interval based on Level
+            spawnTimer += deltaTime;
+            const currentInterval = Math.max(1300, spawnInterval - ((currentLevel - 1) * 200));
+            if (spawnTimer >= currentInterval) {
+                spawnEnemy();
+                spawnTimer = 0;
+            }
+
+            // Update Enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                enemy.update(deltaTime);
+
+                // Reached bottom defense line!
+                if (enemy.y + enemy.height >= playerShip.y - 10) {
+                    handleEnemyBreach(enemy, i);
+                }
+            }
+
+            // Update Lasers
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                lasers[i].update(deltaTime);
+                if (lasers[i].life <= 0) {
+                    lasers.splice(i, 1);
+                }
+            }
+
+            // Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update(deltaTime);
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        /* COMPANION PETS HELPER SHOOT TRIGGER */
+        function triggerPetSupport(petType) {
+            // Find lowest untyped enemy on screen
+            if (enemies.length === 0) return;
+            const target = enemies.reduce((prev, curr) => (curr.y > prev.y ? curr : prev), enemies[0]);
+            if (!target) return;
+
+            audio.petShoot();
+            const startX = playerShip.x + (petType === 'cat' ? -45 : 45);
+            const startY = playerShip.y - 10;
+            const targetX = target.x + target.width / 2;
+            const targetY = target.y + target.height / 2;
+
+            lasers.push(new LaserBeam(startX, startY, targetX, targetY));
+            createExplosion(targetX, targetY, petType === 'cat' ? '#f472b6' : '#60a5fa');
+            
+            destroyEnemy(target);
+            showNotification(petType === 'cat' ? '🐱 Mèo Vũ Trụ đã khai hỏa tiêu diệt 1 từ!' : '🐶 Chó Cyber đã phóng tên lửa bắn hạ 1 từ!');
+        }
+
+        /* DRAW AMBIENT BACKGROUND CHARACTERS IN CANVAS */
+        function drawAmbientCharacter() {
+            ctx.save();
+            const charX = ambientCharacter.x;
+            const charY = ambientCharacter.y + Math.sin(ambientCharacter.phase) * 15;
+            const lvl = Math.min(currentLevel, 4);
+
+            if (lvl === 1) {
+                // LEVEL 1: Spacewalk Astronaut with life-tether line
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(charX - 80, charY + 40);
+                ctx.bezierCurveTo(charX - 40, charY + 20, charX - 20, charY + 60, charX, charY);
+                ctx.stroke();
+
+                // Astronaut body
+                ctx.fillStyle = 'rgba(241, 245, 249, 0.75)';
+                ctx.beginPath();
+                ctx.arc(charX, charY - 8, 8, 0, Math.PI * 2); // Helmet
+                ctx.fill();
+                ctx.fillStyle = '#06b6d4'; // Gold visor
+                ctx.fillRect(charX - 2, charY - 11, 7, 5);
+
+                ctx.fillStyle = 'rgba(203, 213, 225, 0.6)';
+                ctx.fillRect(charX - 7, charY, 14, 16); // Torso
+                ctx.fillRect(charX - 12, charY - 3, 5, 12); // Backpack
+
+            } else if (lvl === 2) {
+                // LEVEL 2: Giant Bioluminescent Cosmic Whale
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 15;
+                ctx.lineWidth = 1.5;
+
+                // Sleek whale body
+                ctx.beginPath();
+                ctx.moveTo(charX + 60, charY);
+                ctx.quadraticCurveTo(charX, charY - 22, charX - 50, charY);
+                ctx.lineTo(charX - 80, charY - 18); // Tail upper
+                ctx.lineTo(charX - 65, charY);
+                ctx.lineTo(charX - 80, charY + 18); // Tail lower
+                ctx.lineTo(charX - 50, charY);
+                ctx.quadraticCurveTo(charX, charY + 22, charX + 60, charY);
+                ctx.fill();
+                ctx.stroke();
+
+                // Glowing eye
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(charX + 45, charY - 4, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else if (lvl === 3) {
+                // LEVEL 3: Bioluminescent Flora Wyrm / Emerald Dragon
+                ctx.strokeStyle = 'rgba(52, 211, 153, 0.45)';
+                ctx.shadowColor = '#10b981';
+                ctx.shadowBlur = 12;
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                for (let i = 0; i < 7; i++) {
+                    const segX = charX - (i * 14);
+                    const segY = charY + Math.sin(ambientCharacter.phase + i * 0.6) * 12;
+                    if (i === 0) ctx.moveTo(segX, segY);
+                    else ctx.lineTo(segX, segY);
+                }
+                ctx.stroke();
+
+                // Head
+                ctx.fillStyle = '#34d399';
+                ctx.beginPath();
+                ctx.arc(charX + 4, charY + Math.sin(ambientCharacter.phase) * 12, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else {
+                // LEVEL 4+: Red Hellground Magma Behemoth (Ominous Horned Colossus)
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+                ctx.strokeStyle = '#ef4444';
+                ctx.shadowColor = '#dc2626';
+                ctx.shadowBlur = 18;
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+                ctx.moveTo(charX + 40, charY);
+                ctx.lineTo(charX + 25, charY - 30); // Right Horn
+                ctx.lineTo(charX + 15, charY - 10);
+                ctx.lineTo(charX - 15, charY - 10);
+                ctx.lineTo(charX - 25, charY - 30); // Left Horn
+                ctx.lineTo(charX - 40, charY);
+                ctx.lineTo(charX - 20, charY + 30);
+                ctx.lineTo(charX + 20, charY + 30);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Blazing eyes
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(charX + 12, charY - 2, 4, 0, Math.PI * 2);
+                ctx.arc(charX - 12, charY - 2, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        /* 4 DISTINCT AMBIENT BACKGROUNDS ACCORDING TO LEVEL */
+        function drawLevelAtmosphereBackground() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const lvl = Math.min(currentLevel, 4);
+
+            if (lvl === 1) {
+                // LEVEL 1: BLACK SPACE (Pure Cosmic Deep Void)
+                ctx.fillStyle = '#050814';
+                ctx.fillRect(0, 0, w, h);
+
+                const grad = ctx.createRadialGradient(w * 0.5, h * 0.4, 20, w * 0.5, h * 0.4, w * 0.7);
+                grad.addColorStop(0, 'rgba(15, 23, 42, 0.4)');
+                grad.addColorStop(1, 'rgba(5, 8, 20, 1)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+            } else if (lvl === 2) {
+                // LEVEL 2: VELVETY BLUE
+                const grad = ctx.createLinearGradient(0, 0, 0, h);
+                grad.addColorStop(0, '#03071e');
+                grad.addColorStop(0.3, '#0b1940');
+                grad.addColorStop(0.7, '#071330');
+                grad.addColorStop(1, '#020617');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                for (let p of ambientParticles) {
+                    ctx.save();
+                    ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha * 0.4})`;
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 1.6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+            } else if (lvl === 3) {
+                // LEVEL 3: BLOOMING GREEN
+                const grad = ctx.createLinearGradient(0, 0, 0, h);
+                grad.addColorStop(0, '#021814');
+                grad.addColorStop(0.3, '#063428');
+                grad.addColorStop(0.7, '#04241b');
+                grad.addColorStop(1, '#01120e');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                for (let p of ambientParticles) {
+                    ctx.save();
+                    ctx.fillStyle = `rgba(52, 211, 153, ${p.alpha * 0.6})`;
+                    ctx.shadowColor = '#10b981';
+                    ctx.shadowBlur = 14;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+            } else {
+                // LEVEL 4+: RED HELLGROUND
+                const grad = ctx.createLinearGradient(0, 0, 0, h);
+                grad.addColorStop(0, '#2b0707');
+                grad.addColorStop(0.35, '#3b0a0a');
+                grad.addColorStop(0.75, '#200505');
+                grad.addColorStop(1, '#0f0202');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                for (let p of ambientParticles) {
+                    ctx.save();
+                    ctx.fillStyle = `rgba(248, 113, 113, ${p.alpha * 0.8})`;
+                    ctx.shadowColor = '#ef4444';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 1.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            // Draw Atmospheric Character in the distance
+            drawAmbientCharacter();
+        }
+
+        /* DRAW ACCOMPANIED PETS BESIDE PLAYER CANNON */
+        function drawCompanionPets() {
+            if (hasPetCat) {
+                ctx.save();
+                const catX = playerShip.x - 48;
+                const catY = playerShip.y + Math.sin(Date.now() / 200) * 4;
+                ctx.shadowColor = '#f472b6';
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = '#f472b6';
+                ctx.beginPath();
+                ctx.arc(catX, catY, 10, 0, Math.PI * 2); // Body
+                ctx.fill();
+                // Cat ears
+                ctx.beginPath();
+                ctx.moveTo(catX - 8, catY - 6); ctx.lineTo(catX - 4, catY - 14); ctx.lineTo(catX, catY - 7);
+                ctx.moveTo(catX + 8, catY - 6); ctx.lineTo(catX + 4, catY - 14); ctx.lineTo(catX, catY - 7);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            if (hasPetDog) {
+                ctx.save();
+                const dogX = playerShip.x + 48;
+                const dogY = playerShip.y + Math.sin(Date.now() / 200 + 1) * 4;
+                ctx.shadowColor = '#60a5fa';
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = '#60a5fa';
+                ctx.beginPath();
+                ctx.arc(dogX, dogY, 11, 0, Math.PI * 2); // Body
+                ctx.fill();
+                // Cyber Visor
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(dogX - 6, dogY - 4, 12, 4);
+                ctx.restore();
+            }
+        }
+
+        function renderGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Dynamic Level Environment & Characters
+            drawLevelAtmosphereBackground();
+
+            // Draw Stars
+            for (let s of stars) {
+                ctx.fillStyle = currentLevel >= 4 
+                    ? `rgba(254, 202, 202, ${s.alpha})` 
+                    : (currentLevel === 3 ? `rgba(167, 243, 208, ${s.alpha})` : `rgba(255, 255, 255, ${s.alpha})`);
+                ctx.fillRect(s.x, s.y, s.size, s.size);
+            }
+
+            // Draw Grid Lines / Defense Perimeter
+            if (currentState === GameState.PLAYING || currentState === GameState.PAUSED) {
+                const perimeterColors = {
+                    1: 'rgba(6, 182, 212, 0.25)',
+                    2: 'rgba(96, 165, 250, 0.3)',
+                    3: 'rgba(52, 211, 153, 0.35)',
+                    4: 'rgba(239, 68, 68, 0.4)'
+                };
+                ctx.strokeStyle = perimeterColors[Math.min(currentLevel, 4)];
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(0, playerShip.y);
+                ctx.lineTo(canvas.width, playerShip.y);
+                ctx.stroke();
+
+                // Draw lasers
+                for (let laser of lasers) {
+                    laser.draw();
+                }
+
+                // Draw enemies
+                for (let enemy of enemies) {
+                    enemy.draw();
+                }
+
+                // Draw particles
+                for (let p of particles) {
+                    p.draw();
+                }
+
+                // Draw player cannon & active pets
+                drawPlayerShip();
+                drawCompanionPets();
+            }
+        }
+
+        /* HANDLING BREACH WITH KIÊN TRUNG'S GRACE & RETALIATION BOMB */
+        function handleEnemyBreach(enemy, index) {
+            // Check KIÊN TRUNG'S GRACE: First miss protection!
+            if (hasKienTrungGrace) {
+                hasKienTrungGrace = false;
+                audio.divineGrace();
+                createExplosion(playerShip.x, playerShip.y - 20, '#fbbf24');
+                document.getElementById('hudGraceStatus').textContent = "✨ Kiên Trung's Grace: Đã dùng";
+                document.getElementById('hudGraceStatus').className = "text-[9px] uppercase text-slate-500 tracking-wider font-semibold block";
+
+                // Golden barrier burst destroys the breached enemy
+                enemies.splice(index, 1);
+                showNotification("✨ Kiên Trung's Grace đã cứu trợ! Em không bị mất tim lần này!");
+                return;
+            }
+
+            audio.hitBase();
+            createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, '#ef4444');
+            missedWords.add(enemy.word + ` (${enemy.meaning})`);
+            enemies.splice(index, 1);
+
+            lives -= (enemy.isBoss ? 2 : 1);
+            if (lives < 0) lives = 0;
+            combo = 0;
+            updateHudLives();
+            updateComboUI();
+
+            // Check Retaliation Passive Bomb: Destroys ALL remaining enemies on screen
+            if (hasRetaliationBomb && enemies.length > 0) {
+                audio.empBlast();
+                enemies.forEach(e => {
+                    createExplosion(e.x + e.width / 2, e.y + e.height / 2, '#a855f7');
+                });
+                enemies = [];
+                resetEnemyTargeting();
+                showNotification("💥 NỘI TẠI PHẢN ĐÒN: Đã kích hoạt sóng EMP quét sạch toàn bộ kẻ thù!");
+            }
+
+            // Shake screen effect
+            document.body.classList.add('shake-screen');
+            setTimeout(() => document.body.classList.remove('shake-screen'), 250);
+
+            showNotification(`⚠️ Thất thủ! ${enemy.isBoss ? 'Quái vật Alien' : 'Từ: "' + enemy.word + '"'} đã xuyên thủng căn cứ!`);
+
+            if (lives <= 0) {
+                endGame(false);
+            }
+        }
+
+        /* =================================================================
+           10. TYPING INPUT HANDLER & TARGETING SYSTEM
+           ================================================================= */
+        const typingInput = document.getElementById('typingInput');
+        const activeWordHint = document.getElementById('activeWordHint');
+        const comboCounter = document.getElementById('comboCounter');
+
+        function triggerTypoEffect() {
+            audio.errorTypo();
+            typingInput.classList.remove('input-error');
+            // Force reflow to replay CSS animation
+            void typingInput.offsetWidth;
+            typingInput.classList.add('input-error');
+            setTimeout(() => {
+                typingInput.classList.remove('input-error');
+            }, 300);
+        }
+
+        typingInput.addEventListener('input', (e) => {
+            const rawVal = typingInput.value;
+            // Clean lowercase string
+            const inputVal = rawVal.toLowerCase();
+            totalKeyStrokes++;
+
+            if (inputVal.length === 0) {
+                resetEnemyTargeting();
+                return;
+            }
+
+            // Find best matching enemy:
+            // 1. Prioritize currently locked target if still valid
+            let target = enemies.find(en => en.isTargeted && en.word.toLowerCase().startsWith(inputVal));
+
+            // 2. Prioritize Alien Boss if input matches boss phrase
+            if (!target) {
+                target = enemies.find(en => en.isBoss && en.word.toLowerCase().startsWith(inputVal));
+            }
+
+            // 3. If not, find closest enemy to bottom that starts with the current input
+            if (!target) {
+                const candidates = enemies.filter(en => en.word.toLowerCase().startsWith(inputVal));
+                if (candidates.length > 0) {
+                    candidates.sort((a, b) => b.y - a.y);
+                    target = candidates[0];
+                }
+            }
+
+            if (target) {
+                enemies.forEach(en => en.isTargeted = (en === target));
+                correctKeyStrokes++;
+                target.isTargeted = true;
+                target.typedIndex = inputVal.length;
+
+                // Fire laser on key progression
+                const targetCenterX = target.x + target.width / 2;
+                const targetCenterY = target.y + target.height / 2;
+                lasers.push(new LaserBeam(playerShip.x, playerShip.y - 20, targetCenterX, targetCenterY));
+                audio.laser();
+
+                // Update Hint bar
+                const iconColor = target.isBoss ? 'text-rose-400' : 'text-emerald-400';
+                activeWordHint.innerHTML = `<i class="fa-solid fa-crosshairs ${iconColor}"></i> ${target.isBoss ? '[BOSS ALIEN]' : 'Mục tiêu'}: <span class="text-white">${target.word}</span> - <span class="text-slate-300 font-normal">"${target.meaning}"</span>`;
+
+                // If word/sentence is completely typed!
+                if (inputVal === target.word.toLowerCase()) {
+                    destroyEnemy(target);
+                    typingInput.value = '';
+                    resetEnemyTargeting();
+                }
+            } else {
+                // Sai ký tự so với bất kỳ từ nào trên màn hình hoặc từ đang nhắm
+                triggerTypoEffect();
+                activeWordHint.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> <span class="text-rose-400 font-bold">Gõ sai rồi!</span> Hãy dùng phím xóa <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-rose-300 text-[10px]">Backspace</kbd> để sửa lại`;
+            }
+        });
+
+        // Space / Enter shortcuts helper
+        typingInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                typingInput.value = '';
+                resetEnemyTargeting();
+            }
+        });
+
+        document.getElementById('btnClearInput').addEventListener('click', () => {
+            typingInput.value = '';
+            resetEnemyTargeting();
+            typingInput.focus();
+        });
+
+        function resetEnemyTargeting() {
+            enemies.forEach(en => {
+                en.isTargeted = false;
+                en.typedIndex = 0;
+            });
+            activeWordHint.innerHTML = `<i class="fa-solid fa-bullseye text-cyan-400"></i> Nhập từ hoặc câu của phi thuyền đối thủ`;
+        }
+
+        function destroyEnemy(enemy) {
+            const index = enemies.indexOf(enemy);
+            if (index === -1) return;
+
+            const enemyCenterX = enemy.x + enemy.width / 2;
+            const enemyCenterY = enemy.y + enemy.height / 2;
+
+            // Audio & blast
+            audio.explosion();
+            createExplosion(enemyCenterX, enemyCenterY, enemy.isBoss ? '#ef4444' : (enemy.part === 1 ? '#06b6d4' : '#c084fc'));
+
+            enemies.splice(index, 1);
+            totalWordsTyped++;
+            wordsTypedInCurrentLevel++;
+
+            // Check Boss Defeat
+            if (enemy.isBoss) {
+                bossesDefeated++;
+                score += 500; // Base bonus
+                showNotification(`🎉 Xuất sắc! Đã tiêu diệt Boss Alien (+500đ)!`);
+                // Trigger Cyber Lucky Wheel
+                setTimeout(() => {
+                    if (currentState === GameState.PLAYING) {
+                        openLuckyWheel();
+                    }
+                }, 800);
+            } else {
+                // Scoring calculation
+                const wordScore = (enemy.word.length * 15) + (combo * 10);
+                score += wordScore;
+            }
+
+            combo++;
+            if (combo > maxCombo) maxCombo = combo;
+            if (combo >= 3) {
+                audio.combo();
+            }
+
+            updateHudScore();
+            updateComboUI();
+
+            // Check Level Up Condition in Progression Mode (Up to Level 4)
+            if (chosenPart === "progression" && wordsTypedInCurrentLevel >= WORDS_TO_LEVEL_UP && currentLevel < 4) {
+                triggerLevelUp();
+            }
+        }
+
+        /* =================================================================
+           11. CYBER LUCKY WHEEL REWARDS SYSTEM (NEW PETS & RETALIATION PASSIVE)
+           ================================================================= */
+        const WHEEL_REWARDS = [
+            { id: 1, name: "Tràng vỗ tay", icon: "👏", rarity: "Thường", rate: 30, color: "#38bdf8" },
+            { id: 2, name: "Khiên chống chết", icon: "🛡️", rarity: "Hiếm", rate: 20, color: "#10b981" },
+            { id: 3, name: "+1,000 Điểm", icon: "💎", rarity: "Khá", rate: 15, color: "#8b5cf6" },
+            { id: 4, name: "+2,000 Điểm", icon: "💰", rarity: "Hiếm", rate: 10, color: "#f59e0b" },
+            { id: 5, name: "+3,000 Điểm", icon: "🚀", rarity: "Rất Hiếm", rate: 7, color: "#ec4899" },
+            { id: 6, name: "Gấp đôi điểm (x2)", icon: "🔥", rarity: "Cực Hiếm", rate: 4, color: "#ef4444" },
+            { id: 7, name: "Gấp ba điểm (x3)", icon: "👑", rarity: "Siêu Hiếm", rate: 2, color: "#eab308" },
+            { id: 8, name: "Pet Mèo Vũ Trụ (Bắn 30s)", icon: "🐱", rarity: "Hiếm", rate: 6, color: "#f472b6" },
+            { id: 9, name: "Pet Chó Cyber (Bắn 20s)", icon: "🐶", rarity: "Rất Hiếm", rate: 4, color: "#3b82f6" },
+            { id: 10, name: "Nội Tại: Sóng EMP Phản Đòn", icon: "💥", rarity: "Tối Thượng", rate: 2, color: "#a855f7" }
+        ];
+
+        let wheelAngle = 0;
+        let isWheelSpinning = false;
+
+        function drawLuckyWheel() {
+            const wCanvas = document.getElementById('wheelCanvas');
+            if (!wCanvas) return;
+            const wCtx = wCanvas.getContext('2d');
+            const numSlices = WHEEL_REWARDS.length;
+            const arc = (Math.PI * 2) / numSlices;
+            const radius = wCanvas.width / 2;
+
+            wCtx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+
+            wCtx.save();
+            wCtx.translate(radius, radius);
+            wCtx.rotate(wheelAngle);
+
+            for (let i = 0; i < numSlices; i++) {
+                const item = WHEEL_REWARDS[i];
+                const startAngle = i * arc;
+                const endAngle = startAngle + arc;
+
+                // Slice background
+                wCtx.beginPath();
+                wCtx.moveTo(0, 0);
+                wCtx.arc(0, 0, radius - 4, startAngle, endAngle);
+                wCtx.closePath();
+                wCtx.fillStyle = item.color;
+                wCtx.fill();
+                wCtx.strokeStyle = '#0f172a';
+                wCtx.lineWidth = 2.2;
+                wCtx.stroke();
+
+                // Slice Text & Icon
+                wCtx.save();
+                wCtx.rotate(startAngle + arc / 2);
+                wCtx.textAlign = 'right';
+                wCtx.fillStyle = '#ffffff';
+                wCtx.font = 'bold 9.5px Orbitron, monospace';
+                wCtx.shadowColor = '#000000';
+                wCtx.shadowBlur = 4;
+                wCtx.fillText(`${item.icon} ${item.name}`, radius - 16, 3.5);
+                wCtx.restore();
+            }
+
+            // Center metallic cap
+            wCtx.beginPath();
+            wCtx.arc(0, 0, 24, 0, Math.PI * 2);
+            wCtx.fillStyle = '#0f172a';
+            wCtx.fill();
+            wCtx.strokeStyle = '#f59e0b';
+            wCtx.lineWidth = 3;
+            wCtx.stroke();
+
+            wCtx.fillStyle = '#f59e0b';
+            wCtx.font = 'bold 11px Orbitron, monospace';
+            wCtx.textAlign = 'center';
+            wCtx.fillText('SPIN', 0, 4);
+
+            wCtx.restore();
+        }
+
+        function pickRewardByRate() {
+            const totalRate = WHEEL_REWARDS.reduce((acc, curr) => acc + curr.rate, 0);
+            const rand = Math.random() * totalRate;
+            let cumulative = 0;
+            for (let i = 0; i < WHEEL_REWARDS.length; i++) {
+                cumulative += WHEEL_REWARDS[i].rate;
+                if (rand <= cumulative) {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        function openLuckyWheel() {
+            currentState = GameState.PAUSED;
+            const modal = document.getElementById('wheelModal');
+            const statusText = document.getElementById('wheelStatusText');
+            const rewardDetail = document.getElementById('wheelRewardDetail');
+            const btnClose = document.getElementById('btnCloseWheel');
+
+            modal.classList.remove('hidden');
+            statusText.classList.remove('hidden');
+            rewardDetail.classList.add('hidden');
+            btnClose.classList.add('hidden');
+
+            drawLuckyWheel();
+            spinWheel();
+        }
+
+        function spinWheel() {
+            if (isWheelSpinning) return;
+            isWheelSpinning = true;
+
+            const targetIndex = pickRewardByRate();
+            const numSlices = WHEEL_REWARDS.length;
+            const sliceArc = (Math.PI * 2) / numSlices;
+
+            const targetSliceAngle = (numSlices - targetIndex - 0.5) * sliceArc;
+            const extraRounds = 5 + Math.floor(Math.random() * 3);
+            const totalTargetAngle = (extraRounds * Math.PI * 2) + targetSliceAngle;
+
+            const startAngle = wheelAngle % (Math.PI * 2);
+            const duration = 4000;
+            let startTime = null;
+
+            function animateSpin(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                wheelAngle = startAngle + (totalTargetAngle - startAngle) * easeOut;
+
+                if (Math.random() < 0.25) {
+                    audio.wheelTick();
+                }
+
+                drawLuckyWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    isWheelSpinning = false;
+                    applyReward(WHEEL_REWARDS[targetIndex]);
+                }
+            }
+
+            requestAnimationFrame(animateSpin);
+        }
+
+        /* FLYING SCORE PARTICLES ANIMATION INTO HUD */
+        function triggerFlyingScoreAnimation(addedAmount) {
+            const hudScoreEl = document.getElementById('hudScore');
+            const hudRect = hudScoreEl.getBoundingClientRect();
+
+            const startX = window.innerWidth / 2;
+            const startY = window.innerHeight / 2;
+
+            const flyEl = document.createElement('div');
+            flyEl.className = 'floating-score text-2xl text-amber-300 neon-cyan';
+            flyEl.textContent = `+${addedAmount.toLocaleString()} PTS!`;
+            flyEl.style.left = `${startX}px`;
+            flyEl.style.top = `${startY}px`;
+            flyEl.style.setProperty('--dest-x', `${hudRect.left - startX + 30}px`);
+            flyEl.style.setProperty('--dest-y', `${hudRect.top - startY}px`);
+
+            document.body.appendChild(flyEl);
+
+            setTimeout(() => {
+                flyEl.remove();
+                hudScoreEl.classList.add('scale-125', 'text-amber-300');
+                setTimeout(() => hudScoreEl.classList.remove('scale-125', 'text-amber-300'), 250);
+            }, 1150);
+        }
+
+        function updateBuffsHUD() {
+            const container = document.getElementById('hudBuffsContainer');
+            container.innerHTML = '';
+            if (hasPetCat) {
+                container.innerHTML += `<span class="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-400/40 text-[10px] font-bold">🐱 Mèo (30s)</span>`;
+            }
+            if (hasPetDog) {
+                container.innerHTML += `<span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/40 text-[10px] font-bold">🐶 Chó (20s)</span>`;
+            }
+            if (hasRetaliationBomb) {
+                container.innerHTML += `<span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/40 text-[10px] font-bold">💥 EMP Phản Đòn</span>`;
+            }
+        }
+
+        function applyReward(reward) {
+            const statusText = document.getElementById('wheelStatusText');
+            const rewardDetail = document.getElementById('wheelRewardDetail');
+            const btnClose = document.getElementById('btnCloseWheel');
+
+            statusText.classList.add('hidden');
+            rewardDetail.classList.remove('hidden');
+            btnClose.classList.remove('hidden');
+
+            audio.fanfare();
+
+            let effectDesc = "";
+            switch (reward.id) {
+                case 1:
+                    audio.applause();
+                    effectDesc = "👏👏 Cả ngân hà nhiệt liệt hoan hô chiến công của em!";
+                    showNotification("👏 Nhận Tràng Vỗ Tay Tuyên Dương!");
+                    break;
+                case 2:
+                    lives = maxLives;
+                    updateHudLives();
+                    effectDesc = "🛡️ Căn cứ phục hồi đầy đủ 5/5 Lá chắn chống chết!";
+                    showNotification("🛡️ Nhận Khiên Chống Chết (Full 5 Tim)!");
+                    break;
+                case 3:
+                    score += 1000;
+                    triggerFlyingScoreAnimation(1000);
+                    updateHudScore();
+                    effectDesc = "💎 Em được cộng trực tiếp +1,000 Điểm!";
+                    showNotification("💎 +1,000 Điểm!");
+                    break;
+                case 4:
+                    score += 2000;
+                    triggerFlyingScoreAnimation(2000);
+                    updateHudScore();
+                    effectDesc = "💰 Em được cộng trực tiếp +2,000 Điểm!";
+                    showNotification("💰 +2,000 Điểm!");
+                    break;
+                case 5:
+                    score += 3000;
+                    triggerFlyingScoreAnimation(3000);
+                    updateHudScore();
+                    effectDesc = "🚀 Siêu phần thưởng: Cộng trực tiếp +3,000 Điểm!";
+                    showNotification("🚀 +3,000 Điểm!");
+                    break;
+                case 6:
+                    const addedDbl = score;
+                    score = Math.max(score * 2, 2000);
+                    triggerFlyingScoreAnimation(addedDbl);
+                    updateHudScore();
+                    effectDesc = "🔥 SIÊU PHẨM: Toàn bộ số điểm hiện tại được GẤP ĐÔI (x2)!";
+                    showNotification("🔥 ĐIỂM SỐ ĐƯỢC NHÂN ĐÔI (x2)!");
+                    break;
+                case 7:
+                    const addedTrpl = score * 2;
+                    score = Math.max(score * 3, 3000);
+                    triggerFlyingScoreAnimation(addedTrpl);
+                    updateHudScore();
+                    effectDesc = "👑 HUYỀN THOẠI: Toàn bộ số điểm hiện tại được GẤP BA (x3)!";
+                    showNotification("👑 ĐIỂM SỐ ĐƯỢC NHÂN BA (x3)!");
+                    break;
+                case 8: // Pet Cat (30s)
+                    hasPetCat = true;
+                    petCatTimer = 30000;
+                    updateBuffsHUD();
+                    effectDesc = "🐱 Mèo Vũ Trụ xuất trận! Tự động phóng laser tiêu diệt 1 từ mỗi 30 giây!";
+                    showNotification("🐱 Đã mở khóa Pet Mèo Vũ Trụ!");
+                    break;
+                case 9: // Pet Dog (20s)
+                    hasPetDog = true;
+                    petDogTimer = 20000;
+                    updateBuffsHUD();
+                    effectDesc = "🐶 Chó Cyber gia nhập! Tự động bắn hạ 1 từ mỗi 20 giây!";
+                    showNotification("🐶 Đã mở khóa Pet Chó Cyber!");
+                    break;
+                case 10: // EMP Retaliation Passive
+                    hasRetaliationBomb = true;
+                    updateBuffsHUD();
+                    effectDesc = "💥 NỘI TẠI TỐI THƯỢNG: Kích hoạt sóng xung kích EMP tiêu diệt toàn bộ kẻ thù trên màn hình ngay khi căn cứ nhận sát thương!";
+                    showNotification("💥 Đã kích hoạt Nội tại EMP Phản Đòn!");
+                    break;
+            }
+
+            rewardDetail.innerHTML = `
+                <div class="text-amber-400 font-bold mb-1">${reward.icon} ${reward.name} <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Tỉ lệ: ${reward.rarity}</span></div>
+                <div class="text-xs text-slate-200 font-semibold">${effectDesc}</div>
+            `;
+        }
+
+        document.getElementById('btnCloseWheel').addEventListener('click', () => {
+            document.getElementById('wheelModal').classList.add('hidden');
+            currentState = GameState.PLAYING;
+            typingInput.focus();
+        });
+
+        /* =================================================================
+           12. HUD & TIMER MANAGEMENT
+           ================================================================= */
+        let gameTimerInterval = null;
+
+        function startCountdown() {
+            clearInterval(gameTimerInterval);
+            updateTimerDisplay();
+
+            gameTimerInterval = setInterval(() => {
+                if (currentState !== GameState.PLAYING) return;
+
+                timeRemaining--;
+                updateTimerDisplay();
+
+                // Boss 1m15s (75s) cycle timer
+                bossCycleTimer--;
+                if (bossCycleTimer <= 0) {
+                    bossCycleTimer = 75; // Reset next 1m15s
+                    triggerBossPhase();
+                }
+
+                if (timeRemaining <= 0) {
+                    clearInterval(gameTimerInterval);
+                    endGame(true); // Completed time successfully!
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeRemaining / 60);
+            const secs = timeRemaining % 60;
+            const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            document.getElementById('hudTimer').textContent = formatted;
+
+            // Pulse red warning when under 60 seconds
+            const timerEl = document.getElementById('hudTimer');
+            if (timeRemaining <= 60) {
+                timerEl.classList.add('text-rose-400');
+                timerEl.classList.remove('text-amber-300');
+            } else {
+                timerEl.classList.remove('text-rose-400');
+                timerEl.classList.add('text-amber-300');
+            }
+        }
+
+        function updateHudScore() {
+            document.getElementById('hudScore').textContent = score.toLocaleString();
+        }
+
+        function updateHudLives() {
+            const container = document.getElementById('livesContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < maxLives; i++) {
+                if (i < lives) {
+                    container.innerHTML += `<i class="fa-solid fa-heart transition-transform scale-110"></i>`;
+                } else {
+                    container.innerHTML += `<i class="fa-regular fa-heart text-slate-700"></i>`;
+                }
+            }
+        }
+
+        function updateComboUI() {
+            if (combo > 1) {
+                comboCounter.classList.remove('hidden');
+                comboCounter.textContent = `COMBO x${combo}! 🔥`;
+            } else {
+                comboCounter.classList.add('hidden');
+            }
+        }
+
+        function showNotification(msg) {
+            const notif = document.getElementById('gameNotification');
+            const text = document.getElementById('notificationText');
+            text.textContent = msg;
+            notif.classList.remove('opacity-0', '-translate-y-2');
+            notif.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                notif.classList.remove('opacity-100', 'translate-y-0');
+                notif.classList.add('opacity-0', '-translate-y-2');
+            }, 2500);
+        }
+
+        /* =================================================================
+           12. GAME LIFECYCLE (START, PAUSE, END)
+           ================================================================= */
+        const startScreen = document.getElementById('startScreen');
+        const topHud = document.getElementById('topHud');
+        const typingBarContainer = document.getElementById('typingBarContainer');
+        const resultModal = document.getElementById('resultModal');
+
+        function startGame() {
+            audio.init();
+            audio.startBGM(); // Start dramatic background music
+
+            // Set player name
+            const rawName = document.getElementById('playerNameInput').value.trim();
+            playerName = rawName.length > 0 ? rawName : "Phi Hành Gia";
+            document.getElementById('hudPlayerName').textContent = playerName;
+
+            // Initialize Level & Kiên Trung Grace Status
+            currentLevel = 1;
+            wordsTypedInCurrentLevel = 0;
+            bossesDefeated = 0;
+            bossCycleTimer = 75; // 1 minute 15 seconds countdown
+            isWaitingForClearScreenToSpawnBoss = false;
+
+            hasKienTrungGrace = true;
+            document.getElementById('hudGraceStatus').textContent = "✨ Kiên Trung's Grace: Sẵn sàng";
+            document.getElementById('hudGraceStatus').className = "text-[9px] uppercase text-amber-400 tracking-wider font-semibold block";
+
+            hasPetCat = false;
+            hasPetDog = false;
+            hasRetaliationBomb = false;
+            updateBuffsHUD();
+
+            document.getElementById('hudLevelBadge').textContent = `LV.1`;
+
+            const badge = document.getElementById('hudPartBadge');
+            if (chosenPart === 'progression') {
+                badge.textContent = "Phần 1: Nghề nghiệp & Thường nhật";
+                badge.className = "hidden sm:inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold bg-cyan-500/20 border border-cyan-400/40 text-cyan-300";
+            } else if (chosenPart === '2') {
+                badge.textContent = "Phần 2: Sở thích & Cụm từ";
+                badge.className = "hidden sm:inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold bg-purple-500/20 border border-purple-400/40 text-purple-300";
+            } else {
+                badge.textContent = "Hỗn Hợp: Cả Phần 1 & Phần 2";
+                badge.className = "hidden sm:inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-500/20 border border-emerald-400/40 text-emerald-300";
+            }
+
+            // Reset States
+            score = 0;
+            lives = 5;
+            combo = 0;
+            maxCombo = 0;
+            totalWordsTyped = 0;
+            totalKeyStrokes = 0;
+            correctKeyStrokes = 0;
+            missedWords.clear();
+            enemies = [];
+            lasers = [];
+            particles = [];
+            spawnTimer = 0;
+            spawnInterval = 3000;
+            timeRemaining = chosenDuration;
+
+            // UI updates
+            updateHudScore();
+            updateHudLives();
+            updateComboUI();
+            resetEnemyTargeting();
+
+            startScreen.classList.add('hidden');
+            resultModal.classList.add('hidden');
+            topHud.classList.remove('hidden');
+            typingBarContainer.classList.remove('hidden');
+
+            // Thả từ đầu tiên ngay lập tức từ giây số 1 để học sinh bắt đầu gõ luôn
+            spawnEnemy();
+
+            currentState = GameState.PLAYING;
+            startCountdown();
+
+            // Auto focus typing input
+            setTimeout(() => {
+                typingInput.value = '';
+                typingInput.focus();
+            }, 100);
+        }
+
+        function endGame(isVictory) {
+            currentState = GameState.GAMEOVER;
+            clearInterval(gameTimerInterval);
+            audio.stopBGM(); // Stop music when game ends
+
+            // Calculate metrics
+            const accuracy = totalKeyStrokes > 0 ? Math.round((correctKeyStrokes / totalKeyStrokes) * 100) : 100;
+            const timePlayedSeconds = chosenDuration - timeRemaining;
+            const playedMins = Math.floor(timePlayedSeconds / 60);
+            const playedSecs = timePlayedSeconds % 60;
+            const timePlayedFormatted = `${playedMins}p ${playedSecs}s`;
+
+            // Save to Local Leaderboard
+            saveScoreRecord({
+                name: playerName,
+                score: score,
+                level: currentLevel,
+                words: totalWordsTyped,
+                date: new Date().toLocaleDateString('vi-VN')
+            });
+
+            // Populate Student & Teacher Report Fields
+            document.getElementById('reportPlayerName').textContent = playerName;
+            document.getElementById('reportDate').textContent = new Date().toLocaleDateString('vi-VN') + " " + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('reportLevelBadge').textContent = `Đạt Level ${currentLevel}`;
+            document.getElementById('resFinalScore').textContent = score.toLocaleString();
+            document.getElementById('resWordsDestroyed').textContent = totalWordsTyped;
+            document.getElementById('resAccuracy').textContent = `${accuracy}%`;
+            document.getElementById('resMaxCombo').textContent = `x${maxCombo}`;
+            document.getElementById('resBossesDefeated').textContent = bossesDefeated;
+            document.getElementById('resTimePlayed').textContent = timePlayedFormatted;
+
+            const resIcon = document.getElementById('resultIcon');
+            const resHeading = document.getElementById('resultHeading');
+            const teacherCallout = document.getElementById('teacherCallout');
+
+            if (isVictory) {
+                resIcon.innerHTML = `<i class="fa-solid fa-crown text-amber-400"></i>`;
+                resHeading.textContent = "CHIẾN THẮNG XUẤT SẮC!";
+                teacherCallout.className = "p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-4 flex items-center justify-center gap-2";
+                teacherCallout.innerHTML = `<i class="fa-solid fa-camera"></i> <span>Tuyệt vời! Chụp ảnh phiếu này gửi cho Giáo viên nhé (${playerName})!</span>`;
+            } else {
+                resIcon.innerHTML = `<i class="fa-solid fa-shield-halved text-rose-400"></i>`;
+                resHeading.textContent = "KẾT THÚC THỬ THÁCH";
+                teacherCallout.className = "p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-4 flex items-center justify-center gap-2";
+                teacherCallout.innerHTML = `<i class="fa-solid fa-camera"></i> <span>Chụp ảnh màn hình nộp cho Giáo viên để xem xét các từ cần ôn nhé!</span>`;
+            }
+
+            // Populate Mistakes list for teacher review
+            const mistakesBox = document.getElementById('mistakesBox');
+            const mistakesList = document.getElementById('mistakesList');
+            if (missedWords.size > 0) {
+                mistakesBox.classList.remove('hidden');
+                mistakesList.innerHTML = '';
+                missedWords.forEach(w => {
+                    const li = document.createElement('li');
+                    li.textContent = w;
+                    mistakesList.appendChild(li);
+                });
+            } else {
+                mistakesBox.classList.add('hidden');
+            }
+
+            resultModal.classList.remove('hidden');
+            topHud.classList.add('hidden');
+            typingBarContainer.classList.add('hidden');
+        }
+
+        /* =================================================================
+           13. SCREENSHOT REPORT GENERATOR (FOR TEACHER SUBMISSION)
+           ================================================================= */
+        document.getElementById('btnTakeScreenshot').addEventListener('click', () => {
+            const reportElement = document.getElementById('screenshotReportArea');
+            const btn = document.getElementById('btnTakeScreenshot');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang xuất ảnh...`;
+
+            html2canvas(reportElement, {
+                backgroundColor: '#050814',
+                scale: 2 // High resolution for crisp text
+            }).then(canvasImage => {
+                const link = document.createElement('a');
+                link.download = `Bao_Cao_Bai_Tap_${playerName.replace(/\s+/g, '_')}.png`;
+                link.href = canvasImage.toDataURL('image/png');
+                link.click();
+
+                btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400 mr-1"></i> Đã tải ảnh xuống!`;
+                setTimeout(() => {
+                    btn.innerHTML = `<i class="fa-solid fa-camera"></i> Tải ảnh chụp cho Giáo viên`;
+                }, 3000);
+            }).catch(err => {
+                btn.innerHTML = `<i class="fa-solid fa-camera"></i> Vui lòng chụp màn hình phím tắt`;
+                setTimeout(() => {
+                    btn.innerHTML = `<i class="fa-solid fa-camera"></i> Tải ảnh chụp cho Giáo viên`;
+                }, 3000);
+            });
+        });
+
+        /* =================================================================
+           14. LEADERBOARD SYSTEM (LOCALSTORAGE)
+           ================================================================= */
+        const LEADERBOARD_KEY = 'spaceship_type_scores_v2';
+
+        function getLeaderboard() {
+            try {
+                const stored = localStorage.getItem(LEADERBOARD_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveScoreRecord(record) {
+            let list = getLeaderboard();
+            list.push(record);
+            list.sort((a, b) => b.score - a.score);
+            list = list.slice(0, 10); // Keep top 10
+            try {
+                localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(list));
+            } catch (e) {}
+        }
+
+        function renderLeaderboardUI() {
+            const listEl = document.getElementById('leaderboardList');
+            const list = getLeaderboard();
+            listEl.innerHTML = '';
+
+            if (list.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">Chưa có thành tích nào. Hãy là người đầu tiên ghi danh!</div>`;
+                return;
+            }
+
+            list.forEach((item, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="font-orbitron font-bold text-base w-7 text-center ${index < 3 ? 'text-amber-400' : 'text-slate-500'}">${medal}</span>
+                        <div>
+                            <span class="font-bold text-white text-sm block">${item.name}</span>
+                            <span class="text-[10px] text-slate-400">Level ${item.level || 1} • ${item.words} từ • ${item.date}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-orbitron font-bold text-cyan-400 text-base">${item.score.toLocaleString()}</span>
+                        <span class="text-[10px] text-slate-500 block uppercase">Điểm</span>
+                    </div>
+                `;
+                listEl.appendChild(div);
+            });
+        }
+
+        /* =================================================================
+           15. VOCABULARY MODAL LIST POPULATION
+           ================================================================= */
+        function buildVocabListCards() {
+            const p1Container = document.getElementById('vocabGridPart1');
+            const p2Container = document.getElementById('vocabGridPart2');
+
+            p1Container.innerHTML = '';
+            p2Container.innerHTML = '';
+
+            // Group 1 & 3 in first box
+            const group1 = [...VOCAB_PART_1, ...VOCAB_PART_3];
+            group1.forEach(item => {
+                const el = document.createElement('div');
+                el.className = "p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between";
+                el.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-cyan-300 font-mono text-xs sm:text-sm">${item.word}</span>
+                        <span class="text-[9px] uppercase font-semibold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">${item.category}</span>
+                    </div>
+                    <span class="text-xs text-slate-300 mt-0.5">${item.vi}</span>
+                `;
+                p1Container.appendChild(el);
+            });
+
+            // Group 2 & 4 in second box
+            const group2 = [...VOCAB_PART_2, ...VOCAB_PART_4];
+            group2.forEach(item => {
+                const el = document.createElement('div');
+                el.className = "p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between";
+                el.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-purple-300 font-mono text-xs sm:text-sm">${item.word}</span>
+                        <span class="text-[9px] uppercase font-semibold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">${item.category}</span>
+                    </div>
+                    <span class="text-xs text-slate-300 mt-0.5">${item.vi}</span>
+                `;
+                p2Container.appendChild(el);
+            });
+        }
+
+        /* =================================================================
+           16. UI EVENT LISTENERS
+           ================================================================= */
+        // Part selection buttons
+        document.querySelectorAll('.part-select-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.part-select-btn').forEach(b => {
+                    b.classList.remove('border-cyan-500', 'bg-cyan-500/20');
+                    b.classList.add('border-slate-700', 'bg-slate-950/60');
+                    b.querySelector('i').className = "fa-regular fa-circle text-slate-600";
+                    b.querySelector('div').classList.remove('text-cyan-300');
+                    b.querySelector('div').classList.add('text-slate-200');
+                });
+                btn.classList.remove('border-slate-700', 'bg-slate-950/60');
+                btn.classList.add('border-cyan-500', 'bg-cyan-500/20');
+                btn.querySelector('i').className = "fa-solid fa-circle-check text-cyan-400";
+                btn.querySelector('div').classList.add('text-cyan-300');
+                chosenPart = btn.getAttribute('data-part');
+            });
+        });
+
+        // Duration selection buttons
+        document.querySelectorAll('.time-select-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.time-select-btn').forEach(b => {
+                    b.classList.remove('border-amber-500', 'bg-amber-500/20', 'text-amber-300', 'font-bold');
+                    b.classList.add('border-slate-700', 'bg-slate-950/60', 'text-slate-300');
+                });
+                btn.classList.remove('border-slate-700', 'bg-slate-950/60', 'text-slate-300');
+                btn.classList.add('border-amber-500', 'bg-amber-500/20', 'text-amber-300', 'font-bold');
+                chosenDuration = parseInt(btn.getAttribute('data-time'), 10);
+            });
+        });
+
+        // Start & Replay
+        document.getElementById('btnStartGame').addEventListener('click', startGame);
+        document.getElementById('btnPlayAgain').addEventListener('click', startGame);
+
+        document.getElementById('btnReturnMenu').addEventListener('click', () => {
+            resultModal.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            currentState = GameState.MENU;
+        });
+
+        // Pause / Quit during gameplay
+        document.getElementById('btnPauseGame').addEventListener('click', () => {
+            if (currentState === GameState.PLAYING) {
+                currentState = GameState.PAUSED;
+                audio.stopBGM();
+                showNotification("Game đã tạm dừng! Nhấp lại nút Pause để chơi tiếp.");
+                setTimeout(() => {
+                    if (currentState === GameState.PAUSED) {
+                        currentState = GameState.PLAYING;
+                        audio.startBGM();
+                        typingInput.focus();
+                    }
+                }, 3000);
+            }
+        });
+
+        // Toggle Sound Mute Button
+        const btnToggleSound = document.getElementById('btnToggleSound');
+        const soundIcon = document.getElementById('soundIcon');
+        if (btnToggleSound && soundIcon) {
+            btnToggleSound.addEventListener('click', () => {
+                const isMuted = audio.toggleMute();
+                if (isMuted) {
+                    soundIcon.className = "fa-solid fa-volume-xmark text-rose-400";
+                    showNotification("🔇 Đã tắt âm thanh");
+                } else {
+                    soundIcon.className = "fa-solid fa-volume-high text-cyan-400";
+                    showNotification("🔊 Đã bật âm thanh và nhạc nền!");
+                }
+                typingInput.focus();
+            });
+        }
+
+        // Modals Toggling
+        const vocabModal = document.getElementById('vocabModal');
+        const leaderboardModal = document.getElementById('leaderboardModal');
+
+        const btnOpenVocab = document.getElementById('btnOpenVocabList');
+        if (btnOpenVocab && vocabModal) {
+            btnOpenVocab.addEventListener('click', () => {
+                vocabModal.classList.remove('hidden');
+            });
+        }
+
+        const btnCloseVocab1 = document.getElementById('btnCloseVocabModal');
+        if (btnCloseVocab1 && vocabModal) {
+            btnCloseVocab1.addEventListener('click', () => {
+                vocabModal.classList.add('hidden');
+            });
+        }
+
+        const btnCloseVocab2 = document.getElementById('btnCloseVocabModal2');
+        if (btnCloseVocab2 && vocabModal) {
+            btnCloseVocab2.addEventListener('click', () => {
+                vocabModal.classList.add('hidden');
+            });
+        }
+
+        const btnOpenLeaderboard = document.getElementById('btnOpenLeaderboard');
+        if (btnOpenLeaderboard && leaderboardModal) {
+            btnOpenLeaderboard.addEventListener('click', () => {
+                renderLeaderboardUI();
+                leaderboardModal.classList.remove('hidden');
+            });
+        }
+
+        const btnCloseLeaderboard1 = document.getElementById('btnCloseLeaderboardModal');
+        if (btnCloseLeaderboard1 && leaderboardModal) {
+            btnCloseLeaderboard1.addEventListener('click', () => {
+                leaderboardModal.classList.add('hidden');
+            });
+        }
+
+        const btnCloseLeaderboard2 = document.getElementById('btnCloseLeaderboardModal2');
+        if (btnCloseLeaderboard2 && leaderboardModal) {
+            btnCloseLeaderboard2.addEventListener('click', () => {
+                leaderboardModal.classList.add('hidden');
+            });
+        }
+
+        const btnClearScores = document.getElementById('btnClearScores');
+        if (btnClearScores) {
+            btnClearScores.addEventListener('click', () => {
+                localStorage.removeItem(LEADERBOARD_KEY);
+                renderLeaderboardUI();
+            });
+        }
+
+        // Focus typing bar on clicking canvas during game
+        canvas.addEventListener('click', () => {
+            if (currentState === GameState.PLAYING) {
+                typingInput.focus();
+            }
+        });
+
+        /* =================================================================
+           17. INITIALIZATION ON WINDOW LOAD
+           ================================================================= */
+        window.onload = function () {
+            resizeCanvas();
+            buildVocabListCards();
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>
