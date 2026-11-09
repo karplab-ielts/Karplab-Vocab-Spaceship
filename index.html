@@ -558,64 +558,67 @@
     <!-- JAVASCRIPT GAME LOGIC -->
     <script>
         /* =================================================================
-           1. DATA: VOCABULARY EXTRACTED FROM NOTEBOOK (2 DISTINCT PARTS)
+           1. DATA: VOCABULARY REPLACED WITH NEW VOCABULARY LIST
            ================================================================= */
         const VOCAB_PART_1 = [
-            { word: "get paid", vi: "được trả tiền", category: "work" },
-            { word: "keep sb company", vi: "đồng hành cùng ai", category: "social" },
-            { word: "application form", vi: "đơn đăng kí (n)", category: "work" },
-            { word: "sales assistants", vi: "trợ lý bán hàng", category: "job" },
-            { word: "life-guard", vi: "nhân viên cứu hộ (gốc)", category: "job" },
-            { word: "receptionist", vi: "nhân viên lễ tân", category: "job" },
-            { word: "shop assistant", vi: "trợ lí bán hàng", category: "job" },
-            { word: "another", vi: "số ít (khác/nữa)", category: "grammar" },
-            { word: "hard-working", vi: "làm việc chăm chỉ", category: "trait" },
-            { word: "especially", vi: "đặc biệt là / như", category: "adverb" },
-            { word: "weekdays", vi: "ngày trong tuần", category: "time" },
-            { word: "day off", vi: "ngày nghỉ (a)", category: "time" },
-            { word: "day in", vi: "ngày làm việc (a)", category: "time" }
+            { word: "not just for but also for", vi: "không chỉ vì mà còn vì…", category: "linking" },
+            { word: "phenomenal", vi: "phi thường, kiệt xuất (a)", category: "adj" },
+            { word: "admire sb for sth", vi: "ngưỡng mộ ai", category: "verb" },
+            { word: "enthusiastic", vi: "giàu lòng nhiệt huyết (a)", category: "adj" },
+            { word: "refuse to give up", vi: "từ chối đầu hàng", category: "phrase" },
+            { word: "despite all the ups and downs", vi: "dù cho có bao nhiêu thăng trầm", category: "phrase" },
+            { word: "rise from the ashes", vi: "vực dậy từ đống tro tàn", category: "idiom" },
+            { word: "discipline", vi: "kỷ luật (n)", category: "noun" },
+            { word: "touch sb's heart", vi: "chạm vào trái tim của ai đó", category: "phrase" },
+            { word: "a source of motivation", vi: "một nguồn động lực", category: "noun" }
         ];
 
         const VOCAB_PART_2 = [
-            { word: "play tennis", vi: "chơi tennis", category: "hobby" },
-            { word: "eat fruit and vegetables", vi: "ăn hoa quả và rau", category: "health" },
-            { word: "enjoy art and music", vi: "thưởng thức hội hoạ và âm nhạc", category: "hobby" },
-            { word: "I enjoy doing smth", vi: "cấu trúc: Tôi thích làm gì đó", category: "grammar" },
-            { word: "scrolling on Tiktok", vi: "lướt tiktok", category: "hobby" },
-            { word: "discuss", vi: "bàn luận", category: "action" },
-            { word: "equally", vi: "ngang nhau", category: "adverb" },
-            { word: "for similar reason", vi: "lý do tương tự nhau", category: "phrase" }
+            { word: "be touched", vi: "thấy xúc động", category: "feeling" },
+            { word: "a sense of emotion", vi: "cảm giác gì…", category: "structure" },
+            { word: "a sense of sadness", vi: "cảm giác buồn bã", category: "emotion" },
+            { word: "a sense of happiness", vi: "cảm giác hạnh phúc", category: "emotion" },
+            { word: "a sense of disappointment", vi: "cảm giác thất vọng", category: "emotion" },
+            { word: "a sense of escapism", vi: "cảm giác muốn trốn chạy thực tại", category: "emotion" },
+            { word: "a ray of hope", vi: "một tia hi vọng", category: "hope" },
+            { word: "give sb a sense of emotion", vi: "cho ai cảm giác gì…", category: "phrase" },
+            { word: "feel a bit down", vi: "thấy hơi buồn", category: "feeling" },
+            { word: "sweet voice", vi: "giọng ngọt ngào", category: "trait" },
+            { word: "treat sb with kindness", vi: "đối xử với ai một cách tử tế", category: "action" }
         ];
 
-        /* LEVEL 3 & 4: TECH & COMMUNICATION VOCABULARY */
+        /* LEVEL 3: MILESTONES & GROWTH MINDSET */
         const VOCAB_PART_3 = [
-            { word: "desktop computer", vi: "máy tính để bàn", category: "tech" },
-            { word: "laptop", vi: "máy tính xách tay", category: "tech" },
-            { word: "tablet", vi: "máy tính bảng", category: "tech" },
-            { word: "landline telephone", vi: "điện thoại bàn", category: "tech" }
+            { word: "coming to the D-day", vi: "vào ngày trọng đại", category: "time" },
+            { word: "take one's mind off all the worries", vi: "không suy nghĩ về vấn đề / gạt bỏ âu lo", category: "idiom" },
+            { word: "overcome a problem", vi: "vượt qua vấn đề", category: "action" },
+            { word: "the winner takes it all", vi: "được ăn cả ngã về không", category: "idiom" },
+            { word: "have a growth mindset", vi: "có tư duy cầu tiến", category: "mindset" },
+            { word: "complete a milestone in one's life", vi: "hoàn thành một cột mốc quan trọng trong cuộc đời", category: "milestone" },
+            { word: "extra detail", vi: "chi tiết thừa (n)", category: "noun" },
+            { word: "pass with flying colors", vi: "thành công rực rỡ (thi cử / cuộc thi)", category: "idiom" }
         ];
 
+        /* LEVEL 4: SOULMATE, BONDS & UNDERDOG SUCCESS */
         const VOCAB_PART_4 = [
-            { word: "smartphone", vi: "điện thoại thông minh", category: "tech" },
-            { word: "smart TV", vi: "ti vi thông minh", category: "tech" },
-            { word: "letter", vi: "lá thư", category: "message" },
-            { word: "smart watch", vi: "đồng hồ thông minh", category: "tech" }
+            { word: "luckily", vi: "may mắn thay", category: "adverb" },
+            { word: "soulmate", vi: "người đồng điệu về mặt tâm hồn", category: "relationship" },
+            { word: "lose guards around sb", vi: "không cần phải đề phòng trước ai (idiom)", category: "idiom" },
+            { word: "bond", vi: "gắn kết (v)", category: "verb" },
+            { word: "have no regrets", vi: "không hối tiếc", category: "phrase" },
+            { word: "underdog", vi: "người không được tin tưởng nhưng thành công rực rỡ", category: "noun" }
         ];
 
-        /* LONG PHRASES/SENTENCES FOR ALIEN MONSTERS (COMBINED FROM BASE VOCAB) */
+        /* LONG PHRASES/SENTENCES FOR ALIEN MONSTERS (COMBINED FROM NEW VOCAB) */
         const ALIEN_BOSS_SENTENCES = [
-            { text: "a hard-working sales assistant", vi: "một trợ lý bán hàng làm việc chăm chỉ" },
-            { text: "I enjoy eating fruit and vegetables", vi: "Tôi thích ăn hoa quả và rau củ" },
-            { text: "keep sb company on weekdays", vi: "đồng hành cùng ai đó vào các ngày trong tuần" },
-            { text: "enjoy art and music on my day off", vi: "thưởng thức nghệ thuật và âm nhạc vào ngày nghỉ" },
-            { text: "scrolling on Tiktok especially on day off", vi: "lướt tiktok đặc biệt là vào ngày nghỉ" },
-            { text: "fill out an application form for receptionist", vi: "điền đơn đăng ký làm nhân viên lễ tân" },
-            { text: "discuss and get paid equally for similar reason", vi: "bàn luận và được trả tiền ngang nhau vì lý do tương tự" },
-            { text: "the life-guard is hard-working especially today", vi: "nhân viên cứu hộ làm việc chăm chỉ đặc biệt là hôm nay" },
-            { text: "type on desktop computer and laptop", vi: "gõ trên máy tính để bàn và máy tính xách tay" },
-            { text: "check smartphone and smart watch for letter", vi: "kiểm tra điện thoại thông minh và đồng hồ để xem thư" },
-            { text: "watch smart TV and talk on landline telephone", vi: "xem smart TV và nói chuyện trên điện thoại bàn" },
-            { text: "read letter on tablet especially on weekdays", vi: "đọc thư trên máy tính bảng đặc biệt vào ngày trong tuần" }
+            { text: "refuse to give up despite all the ups and downs", vi: "từ chối đầu hàng dù cho có bao nhiêu thăng trầm" },
+            { text: "rise from the ashes with great discipline", vi: "vực dậy từ đống tro tàn với tính kỷ luật tuyệt vời" },
+            { text: "complete a milestone in one's life with flying colors", vi: "hoàn thành một cột mốc quan trọng trong đời rực rỡ" },
+            { text: "take one's mind off all the worries and bond together", vi: "gạt bỏ mọi âu lo và gắn kết cùng nhau" },
+            { text: "have a growth mindset to overcome a problem", vi: "có tư duy cầu tiến để vượt qua mọi vấn đề" },
+            { text: "the winner takes it all when coming to the D-day", vi: "được ăn cả ngã về không khi bước vào ngày trọng đại" },
+            { text: "lose guards around sb and treat them with kindness", vi: "không cần đề phòng và đối xử tử tế với họ" },
+            { text: "an underdog who rises with a ray of hope and has no regrets", vi: "người chiếu dưới vươn lên với tia hy vọng và không hối tiếc" }
         ];
 
         /* =================================================================
@@ -1544,37 +1547,44 @@
         /* =================================================================
            8. VOCABULARY SELECTION POOL, LEVEL UP & SPAWN LOGIC
            ================================================================= */
+        function getAllVocabCombined() {
+            return [
+                ...VOCAB_PART_1.map(item => ({ ...item, part: 1 })),
+                ...VOCAB_PART_2.map(item => ({ ...item, part: 2 })),
+                ...VOCAB_PART_3.map(item => ({ ...item, part: 3 })),
+                ...VOCAB_PART_4.map(item => ({ ...item, part: 4 }))
+            ];
+        }
+
         function getVocabularyPool() {
             let pool = [];
             
             if (chosenPart === "progression") {
                 // Progression mode across 10 Levels:
                 if (currentLevel === 1) {
+                    // Level 1: Khởi động với Phần 1
                     pool = VOCAB_PART_1.map(item => ({ ...item, part: 1 }));
                 } else if (currentLevel === 2) {
-                    pool = VOCAB_PART_2.map(item => ({ ...item, part: 2 }));
-                } else if (currentLevel === 3) {
-                    pool = VOCAB_PART_3.map(item => ({ ...item, part: 3 }));
-                } else if (currentLevel === 4) {
-                    pool = VOCAB_PART_4.map(item => ({ ...item, part: 4 }));
-                } else {
-                    // Levels 5 to 10: Cumulative comprehensive vocabulary
+                    // Level 2: Mix tích lũy Phần 1 + Phần 2
                     pool = [
-                        ...VOCAB_PART_4.map(item => ({ ...item, part: 4 })),
-                        ...VOCAB_PART_3.map(item => ({ ...item, part: 3 })),
-                        ...VOCAB_PART_2.map(item => ({ ...item, part: 2 })),
-                        ...VOCAB_PART_1.map(item => ({ ...item, part: 1 }))
+                        ...VOCAB_PART_1.map(item => ({ ...item, part: 1 })),
+                        ...VOCAB_PART_2.map(item => ({ ...item, part: 2 }))
                     ];
+                } else if (currentLevel === 3) {
+                    // Level 3: Mix tích lũy Phần 1 + 2 + 3
+                    pool = [
+                        ...VOCAB_PART_1.map(item => ({ ...item, part: 1 })),
+                        ...VOCAB_PART_2.map(item => ({ ...item, part: 2 })),
+                        ...VOCAB_PART_3.map(item => ({ ...item, part: 3 }))
+                    ];
+                } else {
+                    // Level 4 trở đi (Level 4 - 10): MIX TOÀN BỘ TẤT CẢ CÁC TỪ TRONG KHO DỮ LIỆU
+                    pool = getAllVocabCombined();
                 }
             } else if (chosenPart === "2") {
                 pool = VOCAB_PART_2.map(item => ({ ...item, part: 2 }));
             } else {
-                pool = [
-                    ...VOCAB_PART_1.map(item => ({ ...item, part: 1 })),
-                    ...VOCAB_PART_2.map(item => ({ ...item, part: 2 })),
-                    ...VOCAB_PART_3.map(item => ({ ...item, part: 3 })),
-                    ...VOCAB_PART_4.map(item => ({ ...item, part: 4 }))
-                ];
+                pool = getAllVocabCombined();
             }
             return pool;
         }
@@ -1590,21 +1600,21 @@
             let subMsg = "";
 
             if (currentLevel === 2) {
-                subMsg = "Tiến vào Vùng Velvety Blue: Mở khóa Phần 2 & Cá Voi Không Gian!";
-                document.getElementById('hudPartBadge').textContent = "LV.2: Velvety Blue";
+                subMsg = "Tiến vào Vùng Velvety Blue: Bắt đầu MIX Phần 1 & Phần 2!";
+                document.getElementById('hudPartBadge').textContent = "LV.2: Velvety Blue (Mix 1 & 2)";
                 document.getElementById('hudPartBadge').className = "hidden md:inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-blue-500/20 border border-blue-400/40 text-blue-300";
             } else if (currentLevel === 3) {
-                subMsg = "Tiến vào Vùng Blooming Green: Mở khóa Máy tính, Tablet & Rồng Phát Quang!";
-                document.getElementById('hudPartBadge').textContent = "LV.3: Blooming Green";
+                subMsg = "Tiến vào Vùng Blooming Green: MIX Phần 1, 2 và Phần 3!";
+                document.getElementById('hudPartBadge').textContent = "LV.3: Blooming Green (Mix 1, 2, 3)";
                 document.getElementById('hudPartBadge').className = "hidden md:inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-emerald-500/20 border border-emerald-400/40 text-emerald-300";
             } else if (currentLevel === 4) {
-                subMsg = "CẢNH BÁO: Rơi vào Red Hellground! Mở khóa Smartphone, Smart Watch & Behemoth!";
-                document.getElementById('hudPartBadge').textContent = "LV.4: Red Hellground";
+                subMsg = "CẢNH BÁO: Red Hellground! MIX TOÀN BỘ TẤT CẢ TỪ VỰNG!";
+                document.getElementById('hudPartBadge').textContent = "LV.4: Red Hellground (Mix All)";
                 document.getElementById('hudPartBadge').className = "hidden md:inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-rose-500/20 border border-rose-400/40 text-rose-300 animate-pulse";
             } else {
                 const maxWordsNow = getMaxConcurrentWords();
-                subMsg = `Chiến trường mở rộng! Số lượng từ tối đa tăng lên: ${maxWordsNow} từ cùng lúc!`;
-                document.getElementById('hudPartBadge').textContent = `LV.${currentLevel}: Bão Táp (${maxWordsNow} từ)`;
+                subMsg = `Chiến trường bão táp: MIX TẤT CẢ CÁC TỪ - Xuất hiện tối đa ${maxWordsNow} từ cùng lúc!`;
+                document.getElementById('hudPartBadge').textContent = `LV.${currentLevel}: Mix Toàn Bộ (${maxWordsNow} từ)`;
             }
 
             // Adapt background soundtrack immediately to new atmosphere
@@ -1622,18 +1632,16 @@
         function getPersonalizedBossPhrase() {
             const name = playerName || "Pilot";
             const phrases = [
-                { text: `${name} wants to get paid on weekdays`, vi: `${name} muốn được trả tiền vào ngày trong tuần` },
-                { text: `${name} is a hard-working sales assistant`, vi: `${name} là một trợ lý bán hàng rất chăm chỉ` },
-                { text: `${name} enjoys eating fruit and vegetables`, vi: `${name} rất thích ăn trái cây và rau củ` },
-                { text: `${name} keeps sb company on day off`, vi: `${name} đồng hành cùng ai đó vào ngày nghỉ` },
-                { text: `${name} fills out application form for receptionist`, vi: `${name} điền đơn đăng ký làm nhân viên lễ tân` },
-                { text: `${name} loves scrolling on Tiktok especially at night`, vi: `${name} thích lướt tiktok đặc biệt là ban đêm` },
-                { text: `${name} and the life-guard discuss equally`, vi: `${name} và nhân viên cứu hộ cùng bàn luận ngang nhau` },
-                { text: `${name} enjoys art and music for similar reason`, vi: `${name} thích nghệ thuật và âm nhạc vì lý do tương tự` },
-                { text: `${name} uses desktop computer and laptop daily`, vi: `${name} dùng máy tính bàn và laptop mỗi ngày` },
-                { text: `${name} checks smartphone and smart watch for letter`, vi: `${name} xem smartphone và đồng hồ thông minh để tìm thư` },
-                { text: `${name} watches smart TV on a day off`, vi: `${name} xem ti vi thông minh vào ngày nghỉ` },
-                { text: `${name} calls on landline telephone and uses tablet`, vi: `${name} gọi điện thoại bàn và sử dụng máy tính bảng` }
+                { text: `${name} is phenomenal and refuses to give up`, vi: `${name} thật phi thường và từ chối đầu hàng` },
+                { text: `everyone admires ${name} for great discipline`, vi: `mọi người đều ngưỡng mộ ${name} vì tính kỷ luật tuyệt vời` },
+                { text: `${name} rises from the ashes with a ray of hope`, vi: `${name} vực dậy từ đống tro tàn cùng tia hi vọng` },
+                { text: `${name} has a growth mindset to overcome any problem`, vi: `${name} có tư duy cầu tiến để vượt qua mọi trở ngại` },
+                { text: `${name} will pass with flying colors on the D-day`, vi: `${name} sẽ thành công rực rỡ vào ngày trọng đại` },
+                { text: `${name} completes a milestone in life and has no regrets`, vi: `${name} hoàn thành cột mốc quan trọng trong đời và không hối tiếc` },
+                { text: `${name} is an underdog who takes it all`, vi: `${name} là một underdog kiệt xuất giành lấy tất cả` },
+                { text: `${name} always treats soulmates with kindness`, vi: `${name} luôn đối xử tử tế với những người đồng điệu tâm hồn` },
+                { text: `${name} gives everyone a sense of happiness and motivation`, vi: `${name} mang lại cho mọi người cảm giác hạnh phúc và động lực` },
+                { text: `${name} stays strong despite all the ups and downs`, vi: `${name} luôn vững vàng bất chấp bao thăng trầm` }
             ];
             return phrases[Math.floor(Math.random() * phrases.length)];
         }
@@ -2911,8 +2919,8 @@
             p1Container.innerHTML = '';
             p2Container.innerHTML = '';
 
-            // Group 1 & 3 in first box
-            const group1 = [...VOCAB_PART_1, ...VOCAB_PART_3];
+            // Group 1 & 2 in first box (Phrases, Emotions & Motivation)
+            const group1 = [...VOCAB_PART_1, ...VOCAB_PART_2];
             group1.forEach(item => {
                 const el = document.createElement('div');
                 el.className = "p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between";
@@ -2926,8 +2934,8 @@
                 p1Container.appendChild(el);
             });
 
-            // Group 2 & 4 in second box
-            const group2 = [...VOCAB_PART_2, ...VOCAB_PART_4];
+            // Group 3 & 4 in second box (Milestones, Growth Mindset, Soulmates & Success)
+            const group2 = [...VOCAB_PART_3, ...VOCAB_PART_4];
             group2.forEach(item => {
                 const el = document.createElement('div');
                 el.className = "p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between";
